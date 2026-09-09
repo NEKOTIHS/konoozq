@@ -41,6 +41,10 @@
     'konooz-tourism-active-offer-v1';
 
 
+    const QUOTE_SEQUENCE_KEY =
+  'konooz-quote-sequence-v1';
+
+
   const USER_NAME_KEY =
     'konooz-user-name-v1';
 
@@ -6941,7 +6945,102 @@ $$('.brand-mark')
       return [];
     }
   }
+/* =========================================================
+   QUOTE NUMBER SEQUENCE
+   ========================================================= */
 
+function getHighestQuoteNumber() {
+  let highest =
+    Math.max(
+      0,
+      Number(
+        localStorage.getItem(
+          QUOTE_SEQUENCE_KEY
+        )
+      ) || 0
+    );
+
+
+  const offers =
+    readSavedOffers();
+
+
+  offers.forEach(
+    offer => {
+      const quoteNumber =
+        String(
+          offer
+            ?.payload
+            ?.fields
+            ?.quoteNumber ||
+          ''
+        ).trim();
+
+
+      /*
+       * نحسب فقط الأرقام الجديدة مثل:
+       * 0001
+       * 0002
+       * 0015
+       *
+       * ولا نحسب الأرقام القديمة مثل:
+       * KT-MY-1026
+       */
+      if (
+        !/^\d{4,}$/.test(
+          quoteNumber
+        )
+      ) {
+        return;
+      }
+
+
+      const number =
+        Number(
+          quoteNumber
+        );
+
+
+      if (
+        Number.isFinite(
+          number
+        )
+      ) {
+        highest =
+          Math.max(
+            highest,
+            number
+          );
+      }
+    }
+  );
+
+
+  return highest;
+}
+
+
+function nextQuoteNumber() {
+  const nextNumber =
+    getHighestQuoteNumber() +
+    1;
+
+
+  localStorage.setItem(
+    QUOTE_SEQUENCE_KEY,
+    String(
+      nextNumber
+    )
+  );
+
+
+  return String(
+    nextNumber
+  ).padStart(
+    4,
+    '0'
+  );
+}
 
   function writeSavedOffers(
     offers,
@@ -7627,12 +7726,14 @@ $$('.brand-mark')
 
 
     if (
-      payload.fields
-        ?.quoteNumber
-    ) {
-      payload.fields.quoteNumber =
-        `${payload.fields.quoteNumber}-COPY`;
-    }
+  !payload.fields
+) {
+  payload.fields = {};
+}
+
+
+payload.fields.quoteNumber =
+  nextQuoteNumber();
 
 
     const newId =
@@ -7789,11 +7890,11 @@ $$('.brand-mark')
 
 
     const values = {
-      quoteNumber:
-        '',
+  quoteNumber:
+    nextQuoteNumber(),
 
-      clientName:
-        '',
+  clientName:
+    '',
 
       origin:
         '',
@@ -9686,11 +9787,11 @@ $$('.brand-mark')
 
 
         if (
-          $('#quoteNumber')
-        ) {
-          $('#quoteNumber').value =
-            'KT-MY-1026';
-        }
+  $('#quoteNumber')
+) {
+  $('#quoteNumber').value =
+    nextQuoteNumber();
+}
 
 
         if (
@@ -12773,10 +12874,29 @@ $$('.brand-mark')
   renderAll();
 
 
+const existingOfferLoaded =
   loadDraft();
 
 
-  updateActiveOfferStatus();
+if (
+  !existingOfferLoaded &&
+  $('#quoteNumber')
+) {
+  $('#quoteNumber').value =
+    nextQuoteNumber();
+
+
+  currentOfferTouched =
+    true;
+
+
+  saveDraft(
+    true
+  );
+}
+
+
+updateActiveOfferStatus();
 
 
   updateNewServiceScheduleFields();
