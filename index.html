@@ -1,0 +1,2457 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+
+<head>
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#0b5d4b"
+  >
+
+  <meta
+    name="description"
+    content="منشئ عروض سياحية تفاعلي لوكالات السفر"
+  >
+
+  <title>
+    منشئ العروض السياحية | كنوز السفر
+  </title>
+
+  <link
+    rel="stylesheet"
+    href="./styles.css"
+  >
+</head>
+
+
+<body>
+
+  <div class="app-shell">
+
+    <!-- =====================================================
+         TOPBAR
+         ===================================================== -->
+
+    <header class="topbar no-print">
+
+      <a
+        class="brand"
+        href="#"
+        aria-label="كنوز السفر"
+      >
+
+        <span
+          class="brand-mark"
+          aria-hidden="true"
+        >
+          ك
+        </span>
+
+        <span>
+
+          <strong id="appBrandName">
+            كنوز السفر
+          </strong>
+
+          <small id="appBrandTagline">
+            منشئ العروض السياحية
+          </small>
+
+        </span>
+
+      </a>
+
+
+      <div class="header-actions">
+
+        <div
+  class="drive-connection"
+  id="driveConnection"
+>
+
+  <div
+    class="drive-status"
+    id="driveStatus"
+  >
+
+    <span
+      class="drive-status-dot"
+      id="driveStatusDot"
+    ></span>
+
+    <span id="driveStatusText">
+      Google Drive غير متصل
+    </span>
+
+  </div>
+
+
+  <button
+    class="btn btn-ghost drive-connect-btn"
+    id="connectGoogleDriveBtn"
+    type="button"
+  >
+    ربط Google Drive
+  </button>
+
+
+  <button
+    class="btn btn-ghost drive-disconnect-btn"
+    id="disconnectGoogleDriveBtn"
+    type="button"
+    hidden
+  >
+    قطع الاتصال
+  </button>
+
+</div>
+
+
+<span class="privacy-chip">
+
+  <span class="privacy-dot"></span>
+
+  <span id="storageStatusText">
+    نسخة احتياطية على الجهاز
+  </span>
+
+</span>
+
+
+        <button
+          class="btn btn-ghost"
+          id="resetSampleBtn"
+          type="button"
+        >
+          تحميل الطلب
+        </button>
+
+
+        <button
+          class="btn btn-primary"
+          id="showClientBtn"
+          type="button"
+        >
+          معاينة عرض العميل
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- =====================================================
+         INTERNAL EDITOR
+         ===================================================== -->
+
+    <main
+      id="internalView"
+      class="internal-layout"
+    >
+
+      <section
+        class="workspace"
+        aria-label="بيانات العرض"
+      >
+
+        <!-- =================================================
+             HERO
+             ================================================= -->
+
+        <div class="hero-card">
+
+          <div>
+
+            <span
+              class="eyebrow"
+              id="editorEyebrow"
+            >
+              عرض مبدئي قابل للتعديل
+            </span>
+
+
+            <h1 id="editorTitle">
+              رحلة ماليزيا الخاصة
+            </h1>
+
+
+            <p id="editorSubtitle">
+              طلب جديد لشخصين من جدة إلى ماليزيا.
+            </p>
+
+          </div>
+
+
+          <div class="offer-meta">
+
+            <label>
+
+              رقم العرض
+
+              <input
+                id="quoteNumber"
+                type="text"
+                value="KT-MY-1026"
+              >
+
+            </label>
+
+
+            <label>
+
+              اسم العميل
+
+              <input
+                id="clientName"
+                type="text"
+                value="ضيفنا الكريم"
+              >
+
+            </label>
+
+          </div>
+
+        </div>
+
+
+        <!-- =================================================
+             TABS
+             ================================================= -->
+
+        <nav
+          class="tabs"
+          aria-label="أقسام بناء العرض"
+        >
+
+          <button
+            class="tab active"
+            data-tab="trip"
+            type="button"
+          >
+            1. الرحلة والمسافرون
+          </button>
+
+
+          <button
+            class="tab"
+            data-tab="services"
+            type="button"
+          >
+            2. الخدمات والتكاليف
+          </button>
+
+
+          <button
+            class="tab"
+            data-tab="itinerary"
+            type="button"
+          >
+            3. البرنامج اليومي
+          </button>
+
+
+          <button
+            class="tab"
+            data-tab="settings"
+            type="button"
+          >
+            4. إعدادات النصوص
+          </button>
+
+        </nav>
+
+
+        <div
+          id="validationBanner"
+          class="validation-banner"
+          role="alert"
+          hidden
+        ></div>
+
+
+        <!-- =================================================
+             TRIP
+             ================================================= -->
+
+        <section
+          class="tab-panel active"
+          id="tripPanel"
+          data-panel="trip"
+        >
+
+          <div class="section-heading">
+
+            <div>
+
+              <span class="step-kicker">
+                أساسيات العرض
+              </span>
+
+              <h2>
+                تفاصيل الرحلة
+              </h2>
+
+            </div>
+
+
+            <span class="sample-badge">
+              طلب جديد
+            </span>
+
+          </div>
+
+
+          <div class="form-grid form-grid-3">
+
+            <label>
+
+              مدينة المغادرة
+
+              <input
+                id="origin"
+                type="text"
+                value="جدة"
+                required
+              >
+
+            </label>
+
+
+            <label>
+
+              الوجهة
+
+              <input
+                id="destination"
+                type="text"
+                value="ماليزيا"
+                required
+              >
+
+            </label>
+
+
+            <label>
+
+              تصنيف الفندق
+
+              <select id="hotelStars">
+
+                <option value="3">
+                  3 نجوم
+                </option>
+
+                <option value="4">
+                  4 نجوم
+                </option>
+
+                <option
+                  value="4–5"
+                  selected
+                >
+                  4–5 نجوم
+                </option>
+
+                <option value="5">
+                  5 نجوم
+                </option>
+
+              </select>
+
+            </label>
+
+
+            <label>
+
+              تاريخ المغادرة
+
+              <input
+                id="startDate"
+                type="date"
+                value="2026-10-06"
+                required
+              >
+
+            </label>
+
+
+            <label>
+
+              تاريخ العودة
+
+              <input
+                id="endDate"
+                type="date"
+                value="2026-10-20"
+                required
+              >
+
+            </label>
+
+
+            <label>
+
+              مدة الرحلة
+
+              <input
+                id="durationDisplay"
+                type="text"
+                readonly
+              >
+
+            </label>
+
+          </div>
+
+
+          <!-- TRAVELERS -->
+
+          <div class="sub-card">
+
+            <div class="sub-card-head">
+
+              <div>
+
+                <h3>
+                  المسافرون
+                </h3>
+
+                <p>
+                  تستخدم الأعداد لحساب السعر لكل مسافر.
+                </p>
+
+              </div>
+
+
+              <span
+                id="travelerCountBadge"
+                class="count-badge"
+              >
+                2 مسافرين
+              </span>
+
+            </div>
+
+
+            <div class="form-grid form-grid-2 compact-grid">
+
+              <label>
+
+                البالغون
+
+                <input
+                  id="adults"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value="2"
+                >
+
+              </label>
+
+
+              <label>
+
+                الأطفال
+
+                <input
+                  id="children"
+                  type="number"
+                  min="0"
+                  step="1"
+                  value="0"
+                >
+
+              </label>
+
+            </div>
+
+
+            <div
+              id="childAgesWrap"
+              hidden
+            >
+
+              <p class="field-title">
+                أعمار الأطفال
+              </p>
+
+              <div
+                id="childAges"
+                class="ages-row"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <!-- INTERNAL NOTES -->
+
+          <div class="sub-card">
+
+            <label>
+
+              ملاحظات داخلية
+
+              <textarea
+                id="internalNotes"
+                rows="3"
+              ></textarea>
+
+            </label>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             SERVICES
+             ================================================= -->
+
+        <section
+          class="tab-panel"
+          id="servicesPanel"
+          data-panel="services"
+        >
+
+          <div class="section-heading">
+
+            <div>
+
+              <span class="step-kicker">
+                تكلفة الموردين
+              </span>
+
+              <h2>
+                الخدمات والتسعير
+              </h2>
+
+            </div>
+
+
+            <button
+              class="btn btn-secondary"
+              id="addServiceBtn"
+              type="button"
+            >
+              + إضافة خدمة
+            </button>
+
+          </div>
+
+
+          <p class="helper">
+            أدخل تكلفة كل خدمة ثم حدد هامش الربح المناسب للعرض.
+          </p>
+
+
+          <!-- CITIES -->
+
+          <div class="city-tools">
+
+            <input
+              id="newCityName"
+              type="text"
+              placeholder="اسم مدينة جديدة، مثال: كوالالمبور"
+            >
+
+
+            <button
+              class="btn btn-ghost"
+              id="addCityBtn"
+              type="button"
+            >
+              + إضافة مدينة
+            </button>
+
+          </div>
+
+
+          <div
+            id="servicesList"
+            class="services-list"
+          ></div>
+
+
+          <!-- PRICING -->
+
+          <div class="pricing-card">
+
+            <div class="pricing-control">
+
+              <label>
+
+                طريقة الهامش
+
+                <select id="markupType">
+
+                  <option
+                    value="percent"
+                    selected
+                  >
+                    نسبة من التكلفة
+                  </option>
+
+                  <option value="fixed">
+                    مبلغ ثابت
+                  </option>
+
+                </select>
+
+              </label>
+
+
+              <label id="markupPercentLabel">
+
+                نسبة الهامش
+
+                <input
+                  id="markupValue"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value="18"
+                >
+
+                <span class="input-suffix">
+                  %
+                </span>
+
+              </label>
+
+            </div>
+
+
+            <label
+              class="toggle-row"
+              for="vatEnabled"
+            >
+
+              <span>
+
+                <strong>
+                  إضافة ضريبة قيمة مضافة 15%
+                </strong>
+
+                <small>
+                  اختيارية ويمكن إيقافها لكل عرض.
+                </small>
+
+              </span>
+
+
+              <span class="switch">
+
+                <input
+                  id="vatEnabled"
+                  type="checkbox"
+                >
+
+                <span></span>
+
+              </span>
+
+            </label>
+
+          </div>
+
+        </section>
+
+
+        <!-- =================================================
+             ITINERARY
+             ================================================= -->
+
+        <section
+          class="tab-panel"
+          id="itineraryPanel"
+          data-panel="itinerary"
+        >
+
+          <div class="section-heading">
+
+            <div>
+
+              <span class="step-kicker">
+                تجربة العميل
+              </span>
+
+              <h2>
+                البرنامج اليومي
+              </h2>
+
+            </div>
+
+
+            <button
+              class="btn btn-secondary"
+              id="syncDaysBtn"
+              type="button"
+            >
+              مزامنة الأيام
+            </button>
+
+          </div>
+
+
+          <p class="helper">
+            أضف الأيام عند الحاجة إلى برنامج يومي تفصيلي.
+          </p>
+
+
+          <div
+            id="itineraryList"
+            class="itinerary-list"
+          ></div>
+
+
+          <button
+            class="add-day-button"
+            id="addDayBtn"
+            type="button"
+          >
+            + إضافة يوم جديد
+          </button>
+
+        </section>
+
+
+        <!-- =================================================
+             SETTINGS
+             ================================================= -->
+
+        <section
+          class="tab-panel"
+          id="settingsPanel"
+          data-panel="settings"
+        >
+
+          <div class="section-heading">
+
+            <div>
+
+              <span class="step-kicker">
+                تخصيص الواجهة
+              </span>
+
+              <h2>
+                إعدادات النصوص
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div class="settings-grid">
+
+            <label>
+
+              اسم الشركة
+
+              <input
+                data-copy-key="brandName"
+                type="text"
+              >
+
+            </label>
+
+
+            
+
+
+            
+
+
+            <label>
+  اسم المستخدم
+
+  <input
+    data-copy-key="brandTagline"
+    type="text"
+    placeholder="مثال: خالد"
+    autocomplete="name"
+  >
+</label>
+
+            </label>
+
+
+            <label>
+
+              النص أعلى عنوان النظام
+
+              <input
+                data-copy-key="editorEyebrow"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان النظام
+
+              <input
+                data-copy-key="editorTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              العنوان الفرعي للنظام
+
+              <input
+                data-copy-key="editorSubtitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              رسالة الترحيب
+
+              <input
+                data-copy-key="clientWelcome"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان عرض العميل
+
+              <input
+                data-copy-key="clientHeroTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label class="full-width">
+
+              وصف عرض العميل
+
+              <input
+                data-copy-key="clientHeroSubtitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان الطيران
+
+              <input
+                data-copy-key="flightsTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              وصف الطيران
+
+              <input
+                data-copy-key="flightsSubtitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان الفنادق
+
+              <input
+                data-copy-key="hotelsTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              وصف الفنادق
+
+              <input
+                data-copy-key="hotelsSubtitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان التنقلات
+
+              <input
+                data-copy-key="transfersTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              وصف التنقلات
+
+              <input
+                data-copy-key="transfersSubtitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان الأنشطة
+
+              <input
+                data-copy-key="activitiesTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              وصف الأنشطة
+
+              <input
+                data-copy-key="activitiesSubtitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان البرنامج
+
+              <input
+                data-copy-key="itineraryTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              وصف البرنامج
+
+              <input
+                data-copy-key="itinerarySubtitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان السعر
+
+              <input
+                data-copy-key="priceTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label>
+
+              عنوان الملاحظات
+
+              <input
+                data-copy-key="notesTitle"
+                type="text"
+              >
+
+            </label>
+
+
+            <label class="full-width">
+
+              التذييل
+
+              <input
+                data-copy-key="footerText"
+                type="text"
+              >
+
+            </label>
+
+          </div>
+
+
+          
+
+        </section>
+
+      </section>
+
+
+      <!-- ===================================================
+           SUMMARY
+           =================================================== -->
+
+      <aside
+        class="summary-panel"
+        id="offerSummaryPanel"
+        aria-label="ملخص التسعير"
+      >
+
+        <div class="summary-sticky">
+
+          <div class="summary-top">
+
+            <span class="eyebrow">
+              داخلي - لا يظهر للعميل
+            </span>
+
+            <span class="live-dot">
+              مباشر
+            </span>
+
+          </div>
+
+
+          <h2>
+            ملخص التسعير
+          </h2>
+
+
+          <div class="money-list">
+
+            <div>
+
+              <span>
+                تكلفة الخدمات
+              </span>
+
+              <strong id="costTotal">
+                0 SAR
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                هامش الربح
+              </span>
+
+              <strong id="profitTotal">
+                0 SAR
+              </strong>
+
+            </div>
+
+
+            <div>
+
+              <span>
+                السعر قبل الضريبة
+              </span>
+
+              <strong id="subtotalTotal">
+                0 SAR
+              </strong>
+
+            </div>
+
+
+            <div
+              id="vatRow"
+              class="muted-row"
+            >
+
+              <span>
+                الضريبة
+              </span>
+
+              <strong id="vatTotal">
+                0 SAR
+              </strong>
+
+            </div>
+
+          </div>
+
+
+          <div class="grand-total">
+
+            <span>
+              سعر العميل
+            </span>
+
+            <strong id="grandTotal">
+              0 SAR
+            </strong>
+
+            <small id="perTraveler">
+              0 SAR للفرد
+            </small>
+
+          </div>
+
+
+          <div class="margin-meter">
+
+            <div class="meter-label">
+
+              <span>
+                هامش البيع
+              </span>
+
+              <strong id="marginPercent">
+                0%
+              </strong>
+
+            </div>
+
+
+            <div class="meter-track">
+              <span id="marginBar"></span>
+            </div>
+
+          </div>
+
+
+          <details
+            class="client-controls"
+            open
+          >
+
+            <summary>
+              أقسام عرض العميل
+            </summary>
+
+
+            <div class="client-controls-grid">
+
+              <label>
+                <input
+                  id="showFacts"
+                  type="checkbox"
+                  checked
+                >
+                ملخص الرحلة
+              </label>
+
+
+              <label>
+                <input
+                  id="showFlights"
+                  type="checkbox"
+                  checked
+                >
+                الطيران
+              </label>
+
+
+              <label>
+                <input
+                  id="showHotels"
+                  type="checkbox"
+                  checked
+                >
+                الفنادق
+              </label>
+
+
+              <label>
+                <input
+                  id="showTransfers"
+                  type="checkbox"
+                  checked
+                >
+                التنقلات
+              </label>
+
+
+              <label>
+                <input
+                  id="showActivities"
+                  type="checkbox"
+                >
+                الأنشطة
+              </label>
+
+
+              <label>
+                <input
+                  id="showItinerary"
+                  type="checkbox"
+                >
+                البرنامج
+              </label>
+
+
+              <label>
+                <input
+                  id="showPrices"
+                  type="checkbox"
+                  checked
+                >
+                الأسعار
+              </label>
+
+
+              <label>
+                <input
+                  id="showNotes"
+                  type="checkbox"
+                  checked
+                >
+                الملاحظات
+              </label>
+
+            </div>
+
+          </details>
+
+
+          <button
+            class="btn btn-primary btn-block"
+            id="previewClientBtn"
+            type="button"
+          >
+            إنشاء عرض العميل
+          </button>
+
+
+          <div class="offer-storage-actions">
+
+            <button
+              class="btn btn-secondary"
+              id="saveDraftBtn"
+              type="button"
+            >
+              حفظ العرض
+            </button>
+
+
+            <button
+              class="btn btn-ghost"
+              id="savedOffersBtn"
+              type="button"
+            >
+              العروض المحفوظة
+            </button>
+
+
+            <button
+              class="btn btn-ghost"
+              id="newOfferBtn"
+              type="button"
+            >
+              + عرض جديد
+            </button>
+
+          </div>
+
+
+          <small
+            class="active-offer-status"
+            id="activeOfferStatus"
+          >
+            عرض جديد غير محفوظ
+          </small>
+
+
+          <p class="summary-note">
+            🔒 بيانات الموردين والتكلفة والربح لا تظهر للعميل.
+          </p>
+
+        </div>
+
+      </aside>
+
+
+      <!-- ===================================================
+           FLOATING EDITOR ACTIONS
+           =================================================== -->
+
+      <div
+        class="floating-offer-actions no-print"
+        id="floatingOfferActions"
+        aria-hidden="true"
+      >
+
+        <button
+          class="btn btn-primary floating-offer-btn"
+          id="floatingClientBtn"
+          type="button"
+          tabindex="-1"
+        >
+          عرض العميل
+        </button>
+
+
+        <button
+          class="btn btn-secondary floating-offer-btn floating-summary-btn"
+          id="floatingSummaryBtn"
+          type="button"
+          tabindex="-1"
+        >
+          ملخص العرض
+        </button>
+
+      </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         CLIENT VIEW
+         ===================================================== -->
+
+    <main
+      id="clientView"
+      class="client-view"
+      hidden
+    >
+
+      <div class="client-toolbar no-print">
+
+        <button
+          class="btn btn-ghost"
+          id="backToEditBtn"
+          type="button"
+        >
+          العودة للتعديل
+        </button>
+
+
+        <span class="client-safe">
+          نسخة العميل - بدون التكاليف الداخلية
+        </span>
+
+
+        <div>
+
+          <button
+            class="btn btn-secondary"
+            id="copyOfferBtn"
+            type="button"
+          >
+            نسخ الملخص
+          </button>
+
+
+          <details
+            class="export-menu"
+            id="imageExportMenu"
+          >
+
+            <summary class="btn btn-secondary">
+              حفظ الصور
+            </summary>
+
+
+            <div class="export-menu-panel">
+
+              <button
+                type="button"
+                id="exportLongPngBtn"
+              >
+                PNG طويلة
+              </button>
+
+
+              <button
+                type="button"
+                id="exportPagedPngBtn"
+              >
+                صفحات PNG
+              </button>
+
+
+              <button
+                type="button"
+                id="exportImagePdfBtn"
+              >
+                معاينة PDF
+              </button>
+
+            </div>
+
+          </details>
+
+
+          <button
+            class="btn btn-primary"
+            id="printOfferBtn"
+            type="button"
+          >
+            معاينة PDF
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- FLOATING BACK -->
+
+      <div
+        class="floating-client-back-action no-print"
+        id="floatingClientBackAction"
+        aria-hidden="true"
+      >
+
+        <button
+          class="btn btn-primary"
+          id="floatingBackToEditBtn"
+          type="button"
+          tabindex="-1"
+        >
+          العودة للتعديل
+        </button>
+
+      </div>
+
+
+      <article
+        class="offer-sheet"
+        id="offerSheet"
+      >
+
+        <!-- OFFER HEADER -->
+
+        <header class="offer-header">
+
+          <div class="offer-brand">
+
+            <span class="brand-mark brand-mark-light">
+              ك
+            </span>
+
+
+            <div>
+
+              <strong id="clientBrandName">
+                كنوز السفر
+              </strong>
+
+              <small id="clientBrandTagline">
+                رحلتك تبدأ من هنا
+              </small>
+
+            </div>
+
+          </div>
+
+
+          <div class="offer-number">
+
+            <span>
+              عرض سياحي
+            </span>
+
+            <strong id="clientQuoteNumber">
+              -
+            </strong>
+
+          </div>
+
+        </header>
+
+
+        <!-- OFFER HERO -->
+
+        <section class="offer-hero">
+
+          <div class="offer-hero-copy">
+
+            <span class="offer-label">
+
+              <span id="clientWelcomeText">
+                عرض مخصص لـ
+              </span>
+
+              <b id="clientNameDisplay">
+                ضيفنا الكريم
+              </b>
+
+            </span>
+
+
+            <h1 id="offerTitle">
+              ماليزيا تنتظركم
+            </h1>
+
+
+            <p id="offerSubtitle">
+              رحلة مصممة بعناية
+            </p>
+
+          </div>
+
+
+          <div class="offer-trip-meta">
+
+            <div class="offer-meta-pill">
+
+              <span>
+                موعد الرحلة
+              </span>
+
+              <strong
+                id="offerDates"
+                dir="ltr"
+              >
+                -
+              </strong>
+
+            </div>
+
+
+            <div class="offer-meta-pill">
+
+              <span>
+                مدة الرحلة
+              </span>
+
+              <strong id="offerDuration">
+                -
+              </strong>
+
+            </div>
+
+          </div>
+
+        </section>
+
+
+        <!-- FACTS -->
+
+        <section
+          class="offer-facts"
+          id="offerFacts"
+        ></section>
+
+
+        <!-- FLIGHTS -->
+
+        <section
+          class="offer-section"
+          id="clientFlightsSection"
+        >
+
+          <div class="offer-section-title">
+
+            <span>
+              01
+            </span>
+
+            <div>
+
+              <small id="clientFlightsSubtitle">
+                تفاصيل الرحلات
+              </small>
+
+              <h2 id="clientFlightsTitle">
+                رحلات الطيران
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="included-grid"
+            id="clientFlights"
+          ></div>
+
+        </section>
+
+
+        <!-- HOTELS -->
+
+        <section
+          class="offer-section"
+          id="clientHotelsSection"
+        >
+
+          <div class="offer-section-title">
+
+            <span>
+              02
+            </span>
+
+            <div>
+
+              <small id="clientHotelsSubtitle">
+                تفاصيل الإقامة
+              </small>
+
+              <h2 id="clientHotelsTitle">
+                الفنادق
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div
+            id="clientHotels"
+          ></div>
+
+        </section>
+
+
+        <!-- TRANSFERS -->
+
+        <section
+          class="offer-section"
+          id="clientTransfersSection"
+        >
+
+          <div class="offer-section-title">
+
+            <span>
+              03
+            </span>
+
+            <div>
+
+              <small id="clientTransfersSubtitle">
+                خدمات النقل
+              </small>
+
+              <h2 id="clientTransfersTitle">
+                التنقلات
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="included-grid"
+            id="clientTransfers"
+          ></div>
+
+        </section>
+
+
+        <!-- ACTIVITIES -->
+
+        <section
+          class="offer-section"
+          id="clientActivitiesSection"
+        >
+
+          <div class="offer-section-title">
+
+            <span>
+              04
+            </span>
+
+            <div>
+
+              <small id="clientActivitiesSubtitle">
+                التجارب المختارة
+              </small>
+
+              <h2 id="clientActivitiesTitle">
+                الأنشطة
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="included-grid"
+            id="clientActivities"
+          ></div>
+
+        </section>
+
+
+        <!-- ITINERARY -->
+
+        <section
+          class="offer-section"
+          id="clientItinerarySection"
+        >
+
+          <div class="offer-section-title">
+
+            <span>
+              05
+            </span>
+
+            <div>
+
+              <small id="clientItinerarySubtitle">
+                يوماً بيوم
+              </small>
+
+              <h2 id="clientItineraryTitle">
+                برنامج الرحلة
+              </h2>
+
+            </div>
+
+          </div>
+
+
+          <div
+            class="client-itinerary"
+            id="clientItinerary"
+          ></div>
+
+        </section>
+
+
+        <!-- PRICE -->
+
+        <section
+          class="price-section"
+          id="clientPriceSection"
+        >
+
+          <div>
+
+            <span id="clientPriceTitle">
+              إجمالي سعر الباقة
+            </span>
+
+            <p id="priceTaxNote">
+              السعر النهائي للعرض
+            </p>
+
+          </div>
+
+
+          <strong id="clientGrandTotal">
+            0 SAR
+          </strong>
+
+
+          <small id="clientPerTraveler">
+            -
+          </small>
+
+        </section>
+
+
+        <!-- NOTES -->
+
+        <section
+          class="terms-section"
+          id="clientNotesSection"
+        >
+
+          <h3 id="clientNotesTitle">
+            ملاحظات مهمة
+          </h3>
+
+
+          <ul>
+
+            <li>
+              الأسعار والتوافر قابلة للتغيير حتى تأكيد الحجز.
+            </li>
+
+            <li>
+              لا يتم تثبيت الخدمات إلا بعد استلام التأكيد.
+            </li>
+
+            <li>
+              يرجى التأكد من صلاحية جوازات السفر ومتطلبات الدخول.
+            </li>
+
+          </ul>
+
+        </section>
+
+
+        <!-- FOOTER -->
+
+        <footer class="offer-footer">
+
+          <div>
+
+            <strong id="clientFooterBrand">
+              كنوز السفر للسياحة والسفر
+            </strong>
+
+            <span id="clientFooterText">
+              نسعد بخدمتكم وصناعة رحلة لا تُنسى
+            </span>
+
+          </div>
+
+
+          <span id="clientFooterThanks">
+            شكراً لاختياركم كنوز السفر
+          </span>
+
+        </footer>
+
+      </article>
+
+    </main>
+
+  </div>
+
+
+  <!-- =======================================================
+       ADD SERVICE DIALOG
+       ======================================================= -->
+
+  <dialog id="serviceDialog">
+
+    <form
+      method="dialog"
+      id="serviceForm"
+    >
+
+      <div class="dialog-head">
+
+        <div>
+
+          <span class="step-kicker">
+            خدمة جديدة
+          </span>
+
+          <h2>
+            إضافة بند للعرض
+          </h2>
+
+        </div>
+
+
+        <button
+          class="icon-btn"
+          value="cancel"
+          aria-label="إغلاق"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="form-grid form-grid-2">
+
+        <label>
+
+          نوع الخدمة
+
+          <select id="newServiceCategory">
+
+            <option value="flight">
+              طيران
+            </option>
+
+            <option value="hotel">
+              فندق
+            </option>
+
+            <option value="transfer">
+              نقل
+            </option>
+
+            <option value="activity">
+              نشاط
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+
+          اسم الخدمة
+
+          <input
+            id="newServiceName"
+            type="text"
+            required
+          >
+
+        </label>
+
+
+        <label class="full-width">
+
+          <span id="newServiceDetailsLabel">
+            درجة الطيران
+          </span>
+
+          <input
+            id="newServiceDetails"
+            type="text"
+            placeholder="مثال: الدرجة السياحية"
+          >
+
+        </label>
+
+
+        <!-- FLIGHT -->
+
+        <div
+          id="newFlightDates"
+          class="schedule-form full-width"
+        >
+
+          <label>
+
+            تاريخ إقلاع الذهاب
+
+            <input
+              id="newOutboundDepartureDate"
+              data-flexible-kind="date"
+              type="text"
+              placeholder="6/10/2026"
+              dir="ltr"
+            >
+
+          </label>
+
+
+          <label>
+
+            وقت إقلاع الذهاب
+
+            <input
+              id="newOutboundDepartureTime"
+              data-flexible-kind="time"
+              type="text"
+              placeholder="21:55"
+              dir="ltr"
+            >
+
+          </label>
+
+
+          <label>
+
+            تاريخ وصول الذهاب
+
+            <input
+              id="newOutboundArrivalDate"
+              data-flexible-kind="date"
+              type="text"
+              placeholder="7/10/2026"
+              dir="ltr"
+            >
+
+          </label>
+
+
+          <label>
+
+            وقت وصول الذهاب
+
+            <input
+              id="newOutboundArrivalTime"
+              data-flexible-kind="time"
+              type="text"
+              placeholder="09:30"
+              dir="ltr"
+            >
+
+          </label>
+
+
+          <label>
+
+            تاريخ إقلاع العودة
+
+            <input
+              id="newReturnDepartureDate"
+              data-flexible-kind="date"
+              type="text"
+              placeholder="20/10/2026"
+              dir="ltr"
+            >
+
+          </label>
+
+
+          <label>
+
+            وقت إقلاع العودة
+
+            <input
+              id="newReturnDepartureTime"
+              data-flexible-kind="time"
+              type="text"
+              placeholder="14:20"
+              dir="ltr"
+            >
+
+          </label>
+
+
+          <label>
+
+            تاريخ وصول العودة
+
+            <input
+              id="newReturnArrivalDate"
+              data-flexible-kind="date"
+              type="text"
+              placeholder="20/10/2026"
+              dir="ltr"
+            >
+
+          </label>
+
+
+          <label>
+
+            وقت وصول العودة
+
+            <input
+              id="newReturnArrivalTime"
+              data-flexible-kind="time"
+              type="text"
+              placeholder="21:10"
+              dir="ltr"
+            >
+
+          </label>
+
+        </div>
+
+
+        <!-- HOTEL -->
+
+        <div
+          id="newHotelDates"
+          class="schedule-form schedule-form-hotel full-width"
+          hidden
+        >
+
+          <label>
+
+            المدينة
+
+            <input
+              id="newHotelCity"
+              type="text"
+              list="hotelCitiesList"
+              placeholder="كوالالمبور"
+            >
+
+          </label>
+
+
+          <label>
+
+            تاريخ الدخول
+
+            <input
+              id="newHotelCheckIn"
+              data-flexible-kind="date"
+              type="text"
+              placeholder="18/10/2026"
+              dir="ltr"
+              autocomplete="off"
+            >
+
+          </label>
+
+
+          <label>
+
+            وقت الدخول
+
+            <input
+              id="newHotelCheckInTime"
+              data-flexible-kind="time"
+              type="text"
+              placeholder="15:00"
+              dir="ltr"
+              autocomplete="off"
+            >
+
+          </label>
+
+
+          <label>
+
+            تاريخ الخروج
+
+            <input
+              id="newHotelCheckOut"
+              data-flexible-kind="date"
+              type="text"
+              placeholder="20/10/2026"
+              dir="ltr"
+              autocomplete="off"
+            >
+
+          </label>
+
+
+          <label>
+
+            وقت الخروج
+
+            <input
+              id="newHotelCheckOutTime"
+              data-flexible-kind="time"
+              type="text"
+              placeholder="12:00"
+              dir="ltr"
+              autocomplete="off"
+            >
+
+          </label>
+
+
+          <label>
+
+            ضريبة الفندق
+
+            <input
+              id="newHotelTax"
+              type="number"
+              min="0"
+              step="0.01"
+              value="0"
+            >
+
+          </label>
+
+        </div>
+
+
+        <label>
+
+          نوع التكلفة
+
+          <select id="newServiceCostMode">
+
+            <option
+              value="total"
+              selected
+            >
+              تكلفة إجمالية
+            </option>
+
+            <option value="unit">
+              تكلفة الوحدة
+            </option>
+
+          </select>
+
+        </label>
+
+
+        <label>
+
+          <span id="newServiceQtyLabel">
+            الكمية
+          </span>
+
+          <input
+            id="newServiceQty"
+            type="number"
+            min="1"
+            step="1"
+            value="1"
+            required
+          >
+
+        </label>
+
+
+        <label>
+
+          التكلفة
+
+          <input
+            id="newServiceCost"
+            type="number"
+            min="0"
+            step="0.01"
+            value="0"
+            required
+          >
+
+        </label>
+
+      </div>
+
+
+      <div class="dialog-actions">
+
+        <button
+          class="btn btn-ghost"
+          value="cancel"
+        >
+          إلغاء
+        </button>
+
+
+        <button
+          class="btn btn-primary"
+          id="confirmAddService"
+          value="default"
+        >
+          إضافة الخدمة
+        </button>
+
+      </div>
+
+    </form>
+
+  </dialog>
+
+
+  <!-- =======================================================
+       SAVED OFFERS
+       ======================================================= -->
+
+  <dialog
+    id="savedOffersDialog"
+    class="saved-offers-dialog"
+  >
+
+    <div class="dialog-panel">
+
+      <div class="dialog-head">
+
+        <div>
+
+          <span class="step-kicker">
+            مكتبة العروض
+          </span>
+
+          <h2>
+            العروض المحفوظة
+          </h2>
+
+        </div>
+
+
+        <button
+          class="icon-btn"
+          id="closeSavedOffersBtn"
+          type="button"
+          aria-label="إغلاق"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="saved-offers-tools">
+
+        <label>
+
+          البحث
+
+          <input
+            id="savedOffersSearch"
+            type="search"
+            placeholder="رقم العرض، العميل أو الوجهة..."
+            autocomplete="off"
+          >
+
+        </label>
+
+
+        <span
+          class="count-badge"
+          id="savedOffersCount"
+        >
+          0 عروض
+        </span>
+
+      </div>
+
+
+      <div
+        class="saved-offers-list"
+        id="savedOffersList"
+      ></div>
+
+
+      <div class="dialog-actions">
+
+        <button
+          class="btn btn-primary"
+          id="newOfferFromDialogBtn"
+          type="button"
+        >
+          + إنشاء عرض جديد
+        </button>
+
+
+        <button
+          class="btn btn-ghost"
+          id="closeSavedOffersBottomBtn"
+          type="button"
+        >
+          إغلاق
+        </button>
+
+      </div>
+
+    </div>
+
+  </dialog>
+
+
+  <!-- =======================================================
+       PDF PREVIEW
+       ======================================================= -->
+
+  <dialog
+    id="pdfPreviewDialog"
+    class="pdf-preview-dialog"
+  >
+
+    <div class="pdf-preview-shell">
+
+      <div class="pdf-preview-head">
+
+        <div>
+
+          <span class="step-kicker">
+            PDF
+          </span>
+
+          <h2>
+            معاينة الملف قبل التحميل
+          </h2>
+
+          <small>
+            الملف الظاهر هنا هو نفس الملف الذي سيتم تنزيله.
+          </small>
+
+        </div>
+
+
+        <button
+          class="icon-btn"
+          id="closePdfPreviewBtn"
+          type="button"
+          aria-label="إغلاق"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div class="pdf-preview-body">
+
+        <iframe
+          id="pdfPreviewFrame"
+          class="pdf-preview-frame"
+          title="معاينة ملف PDF"
+        ></iframe>
+
+      </div>
+
+
+      <div class="pdf-preview-actions">
+
+        <span id="pdfPreviewFilename">
+          Offer.pdf
+        </span>
+
+
+        <div>
+
+          <button
+            class="btn btn-ghost"
+            id="cancelPdfPreviewBtn"
+            type="button"
+          >
+            إغلاق
+          </button>
+
+
+          <button
+            class="btn btn-primary"
+            id="downloadPreviewPdfBtn"
+            type="button"
+          >
+            تحميل PDF
+          </button>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </dialog>
+
+
+  <datalist id="hotelCitiesList"></datalist>
+
+
+  <div
+    id="toast"
+    class="toast"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+
+  <script
+  src="https://accounts.google.com/gsi/client"
+  async
+  defer
+></script>
+
+<script
+  src="./app.js"
+  defer
+></script>
+
+</body>
+
+</html>
