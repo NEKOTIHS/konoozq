@@ -9875,7 +9875,134 @@ $$('.brand-mark')
   /* =========================================================
      OFFER CANVAS
      ========================================================= */
+/* =========================================================
+   INLINE IMAGES FOR PDF CAPTURE
+   ========================================================= */
 
+async function blobToDataUrl(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      resolve(reader.result);
+    };
+
+    reader.onerror = () => {
+      reject(
+        new Error(
+          'تعذر تحويل الصورة إلى Data URL'
+        )
+      );
+    };
+
+    reader.readAsDataURL(blob);
+  });
+}
+
+
+async function imageUrlToDataUrl(url) {
+  if (!url) {
+    return '';
+  }
+
+  if (url.startsWith('data:')) {
+    return url;
+  }
+
+  const absoluteUrl =
+    new URL(
+      url,
+      window.location.href
+    ).href;
+
+  const response =
+    await fetch(
+      absoluteUrl,
+      {
+        cache: 'force-cache'
+      }
+    );
+
+  if (!response.ok) {
+    throw new Error(
+      `تعذر تحميل الصورة: ${absoluteUrl}`
+    );
+  }
+
+  const blob =
+    await response.blob();
+
+  return blobToDataUrl(
+    blob
+  );
+}
+
+
+async function inlineImagesForCapture(
+  source,
+  clone
+) {
+  const sourceImages = [
+    ...source.querySelectorAll(
+      'img'
+    )
+  ];
+
+  const cloneImages = [
+    ...clone.querySelectorAll(
+      'img'
+    )
+  ];
+
+  await Promise.all(
+    sourceImages.map(
+      async (
+        sourceImage,
+        index
+      ) => {
+        const cloneImage =
+          cloneImages[index];
+
+        if (!cloneImage) {
+          return;
+        }
+
+        const imageUrl =
+          sourceImage.currentSrc ||
+          sourceImage.src ||
+          sourceImage.getAttribute(
+            'src'
+          );
+
+        if (!imageUrl) {
+          return;
+        }
+
+        try {
+          const dataUrl =
+            await imageUrlToDataUrl(
+              imageUrl
+            );
+
+          cloneImage.setAttribute(
+            'src',
+            dataUrl
+          );
+        } catch (error) {
+          console.error(
+            '[PDF image capture]',
+            error
+          );
+
+          cloneImage.setAttribute(
+            'src',
+            imageUrl
+          );
+        }
+      }
+    )
+  );
+}
   async function renderOfferCanvas() {
     if (
       document.fonts
@@ -10078,16 +10205,26 @@ $$('.brand-mark')
 
 
     const clone =
-      source.cloneNode(
-        true
-      );
+  source.cloneNode(
+    true
+  );
 
 
-    clone.dir =
-      'rtl';
+clone.dir =
+  'rtl';
 
 
-    const originals = [
+/*
+ * نحول جميع الصور إلى Data URL
+ * حتى تظهر داخل PDF وSVG بشكل صحيح.
+ */
+await inlineImagesForCapture(
+  source,
+  clone
+);
+
+
+const originals = [
       source,
       ...source.querySelectorAll(
         '*'
