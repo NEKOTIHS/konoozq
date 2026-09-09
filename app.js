@@ -41,9 +41,6 @@
     'konooz-tourism-active-offer-v1';
 
 
-  
-
-
   const USER_NAME_KEY =
     'konooz-user-name-v1';
 
@@ -288,7 +285,6 @@
     return String(value)
       .replace(
         /[&<>'"]/g,
-
         character => ({
           '&': '&amp;',
           '<': '&lt;',
@@ -471,7 +467,6 @@
     return String(value)
       .replace(
         /[٠-٩]/g,
-
         digit =>
           arabic.indexOf(
             digit
@@ -479,7 +474,6 @@
       )
       .replace(
         /[۰-۹]/g,
-
         digit =>
           persian.indexOf(
             digit
@@ -1629,10 +1623,6 @@
     }
 
 
-    /*
-     * جميع نصوص النظام ثابتة من الكود.
-     * لا نعتمد على النصوص المخزنة داخل العرض.
-     */
     state.copy = {
       ...structuredClone(
         defaultCopy
@@ -1793,10 +1783,8 @@
 
 
     if (
-      checkIn ===
-        null ||
-      checkOut ===
-        null
+      checkIn === null ||
+      checkOut === null
     ) {
       return 0;
     }
@@ -1914,8 +1902,7 @@
 
 
     const markupType =
-      $('#markupType')
-        ?.value ||
+      $('#markupType')?.value ||
       'percent';
 
 
@@ -1937,8 +1924,7 @@
 
     const vatEnabled =
       Boolean(
-        $('#vatEnabled')
-          ?.checked
+        $('#vatEnabled')?.checked
       );
 
 
@@ -2151,42 +2137,55 @@
 
 
     /*
- * الشعار الرسمي الثابت.
- */
-$$('.brand-mark')
-  .forEach(
-    mark => {
-      mark.replaceChildren();
-
-
-      const image =
-        document.createElement(
-          'img'
-        );
-
-
-      image.src =
-        './assets/logo.png';
-
-
-      image.alt =
-        'كنوز السفر';
-
-
-      image.className =
-        'brand-logo-image';
-
-
-      mark.appendChild(
-        image
-      );
-    }
-  );
-
-    /*
-     * النصوص ظاهرة في صفحة الإعدادات كما هي.
-     * الحقل الوحيد القابل للتعديل هو brandTagline.
+     * الشعار الثابت.
      */
+    $$('.brand-mark')
+      .forEach(
+        mark => {
+          mark.replaceChildren();
+
+
+          const image =
+            document.createElement(
+              'img'
+            );
+
+
+          image.src =
+            './assets/logo.png';
+
+
+          image.alt =
+            defaultCopy.brandName;
+
+
+          image.className =
+            'brand-logo-image';
+
+
+          image.onerror =
+            () => {
+              mark.replaceChildren();
+
+
+              mark.textContent =
+                defaultCopy.brandName
+                  .trim()
+                  .slice(
+                    0,
+                    1
+                  ) ||
+                'ك';
+            };
+
+
+          mark.appendChild(
+            image
+          );
+        }
+      );
+
+
     $$(
       '[data-copy-key]'
     ).forEach(
@@ -2201,8 +2200,7 @@ $$('.brand-mark')
 
 
         if (
-          'readOnly' in
-          input
+          'readOnly' in input
         ) {
           input.readOnly =
             !editable;
@@ -3338,8 +3336,7 @@ $$('.brand-mark')
 
     if (
       toNumber(
-        $('#adults')
-          ?.value
+        $('#adults')?.value
       ) <
       1
     ) {
@@ -3837,8 +3834,7 @@ $$('.brand-mark')
       Math.max(
         0,
         toNumber(
-          $('#adults')
-            ?.value
+          $('#adults')?.value
         )
       );
 
@@ -3847,8 +3843,7 @@ $$('.brand-mark')
       Math.max(
         0,
         toNumber(
-          $('#children')
-            ?.value
+          $('#children')?.value
         )
       );
 
@@ -4031,8 +4026,7 @@ $$('.brand-mark')
       facts
     ) {
       facts.hidden =
-        !$('#showFacts')
-          ?.checked;
+        !$('#showFacts')?.checked;
     }
 
 
@@ -4044,8 +4038,7 @@ $$('.brand-mark')
       itinerarySection
     ) {
       itinerarySection.hidden =
-        !$('#showItinerary')
-          ?.checked ||
+        !$('#showItinerary')?.checked ||
         !state.itinerary.length;
     }
 
@@ -4058,8 +4051,7 @@ $$('.brand-mark')
       priceSection
     ) {
       priceSection.hidden =
-        !$('#showPrices')
-          ?.checked;
+        !$('#showPrices')?.checked;
     }
 
 
@@ -4071,8 +4063,7 @@ $$('.brand-mark')
       notesSection
     ) {
       notesSection.hidden =
-        !$('#showNotes')
-          ?.checked;
+        !$('#showNotes')?.checked;
     }
 
 
@@ -4101,8 +4092,7 @@ $$('.brand-mark')
     setText(
       '#priceTaxNote',
 
-      $('#vatEnabled')
-        ?.checked
+      $('#vatEnabled')?.checked
         ? 'شامل ضريبة القيمة المضافة'
         : 'السعر النهائي للعرض'
     );
@@ -5979,8 +5969,7 @@ $$('.brand-mark')
             Math.max(
               1,
               toNumber(
-                $('#newServiceQty')
-                  ?.value,
+                $('#newServiceQty')?.value,
                 1
               )
             ),
@@ -5989,8 +5978,7 @@ $$('.brand-mark')
             Math.max(
               0,
               toNumber(
-                $('#newServiceCost')
-                  ?.value
+                $('#newServiceCost')?.value
               )
             )
         };
@@ -6014,32 +6002,28 @@ $$('.brand-mark')
         ) {
           const checkIn =
             parseFlexibleDate(
-              $('#newHotelCheckIn')
-                ?.value ||
+              $('#newHotelCheckIn')?.value ||
               ''
             );
 
 
           const checkOut =
             parseFlexibleDate(
-              $('#newHotelCheckOut')
-                ?.value ||
+              $('#newHotelCheckOut')?.value ||
               ''
             );
 
 
           const checkInTime =
             parseFlexibleTime(
-              $('#newHotelCheckInTime')
-                ?.value ||
+              $('#newHotelCheckInTime')?.value ||
               ''
             );
 
 
           const checkOutTime =
             parseFlexibleTime(
-              $('#newHotelCheckOutTime')
-                ?.value ||
+              $('#newHotelCheckOutTime')?.value ||
               ''
             );
 
@@ -6087,8 +6071,7 @@ $$('.brand-mark')
             Math.max(
               0,
               toNumber(
-                $('#newHotelTax')
-                  ?.value
+                $('#newHotelTax')?.value
               )
             );
 
@@ -6128,64 +6111,56 @@ $$('.brand-mark')
 
           const outboundDepartureDate =
             parseFlexibleDate(
-              $('#newOutboundDepartureDate')
-                ?.value ||
+              $('#newOutboundDepartureDate')?.value ||
               ''
             );
 
 
           const outboundDepartureTime =
             parseFlexibleTime(
-              $('#newOutboundDepartureTime')
-                ?.value ||
+              $('#newOutboundDepartureTime')?.value ||
               ''
             );
 
 
           const outboundArrivalDate =
             parseFlexibleDate(
-              $('#newOutboundArrivalDate')
-                ?.value ||
+              $('#newOutboundArrivalDate')?.value ||
               ''
             );
 
 
           const outboundArrivalTime =
             parseFlexibleTime(
-              $('#newOutboundArrivalTime')
-                ?.value ||
+              $('#newOutboundArrivalTime')?.value ||
               ''
             );
 
 
           const returnDepartureDate =
             parseFlexibleDate(
-              $('#newReturnDepartureDate')
-                ?.value ||
+              $('#newReturnDepartureDate')?.value ||
               ''
             );
 
 
           const returnDepartureTime =
             parseFlexibleTime(
-              $('#newReturnDepartureTime')
-                ?.value ||
+              $('#newReturnDepartureTime')?.value ||
               ''
             );
 
 
           const returnArrivalDate =
             parseFlexibleDate(
-              $('#newReturnArrivalDate')
-                ?.value ||
+              $('#newReturnArrivalDate')?.value ||
               ''
             );
 
 
           const returnArrivalTime =
             parseFlexibleTime(
-              $('#newReturnArrivalTime')
-                ?.value ||
+              $('#newReturnArrivalTime')?.value ||
               ''
             );
 
@@ -6640,10 +6615,6 @@ $$('.brand-mark')
     );
 
 
-  /*
-   * إذا كانت عناصر تغيير الشعار ما زالت في HTML
-   * نمنع استخدامها لأن الشعار ثابت.
-   */
   $('#companyLogoInput')
     ?.addEventListener(
       'change',
@@ -6877,16 +6848,12 @@ $$('.brand-mark')
       );
 
 
-    /*
-     * نصوص النظام واسم المستخدم لا يتم
-     * تخزينها مع العرض ولا رفعها إلى Drive.
-     */
     delete stateSnapshot.copy;
 
 
     return {
       version:
-        7,
+        8,
 
       fields:
         Object.fromEntries(
@@ -6925,357 +6892,6 @@ $$('.brand-mark')
 
 
   function readSavedOffers() {
-    /* =========================================================
-   UNIQUE QUOTE NUMBER
-   ========================================================= */
-
-function formatQuoteNumber(
-  value
-) {
-  const number =
-    Math.max(
-      1,
-      Number(value) || 1
-    );
-
-
-  return String(
-    number
-  ).padStart(
-    4,
-    '0'
-  );
-}
-
-
-function getUsedQuoteNumbers(
-  excludeOfferId = null
-) {
-  const used =
-    new Set();
-
-
-  readSavedOffers()
-    .forEach(
-      offer => {
-        if (
-          excludeOfferId &&
-          offer.id ===
-          excludeOfferId
-        ) {
-          return;
-        }
-
-
-        const quoteNumber =
-          String(
-            offer
-              ?.payload
-              ?.fields
-              ?.quoteNumber ||
-            ''
-          ).trim();
-
-
-        if (
-          !/^\d+$/.test(
-            quoteNumber
-          )
-        ) {
-          return;
-        }
-
-
-        used.add(
-          Number(
-            quoteNumber
-          )
-        );
-      }
-    );
-
-
-  return used;
-}
-
-
-function getAvailableQuoteNumber(
-  preferredNumber = '0001',
-  excludeOfferId = null
-) {
-  const used =
-    getUsedQuoteNumbers(
-      excludeOfferId
-    );
-
-
-  let candidate =
-    Math.max(
-      1,
-      Number(
-        preferredNumber
-      ) || 1
-    );
-
-
-  /*
-   * لا نغير الرقم إلا إذا كان مستخدماً.
-   */
-  while (
-    used.has(
-      candidate
-    )
-  ) {
-    candidate +=
-      1;
-  }
-
-
-  return formatQuoteNumber(
-    candidate
-  );
-}
-/* =========================================================
-   RENUMBER SAVED OFFERS
-   ========================================================= */
-
-function rebuildOfferTitle(
-  offer
-) {
-  const fields =
-    offer
-      ?.payload
-      ?.fields ||
-    {};
-
-
-  const quoteNumber =
-    String(
-      fields.quoteNumber ||
-      ''
-    ).trim();
-
-
-  const clientName =
-    String(
-      fields.clientName ||
-      ''
-    ).trim();
-
-
-  const destination =
-    String(
-      fields.destination ||
-      ''
-    ).trim();
-
-
-  return (
-    [
-      quoteNumber,
-      clientName
-    ]
-      .filter(
-        Boolean
-      )
-      .join(
-        ' - '
-      ) ||
-    destination ||
-    'عرض جديد'
-  );
-}
-
-
-function renumberOffersSequentially(
-  offers
-) {
-  const result =
-    structuredClone(
-      offers
-    );
-
-
-  /*
-   * نأخذ فقط العروض التي تحمل
-   * رقماً رقمياً مثل 0001 و 0002.
-   */
-  const numberedOffers =
-    result
-      .filter(
-        offer => {
-          const quoteNumber =
-            String(
-              offer
-                ?.payload
-                ?.fields
-                ?.quoteNumber ||
-              ''
-            ).trim();
-
-
-          return /^\d+$/.test(
-            quoteNumber
-          );
-        }
-      )
-      .sort(
-        (
-          first,
-          second
-        ) => {
-          const firstNumber =
-            Number(
-              first
-                .payload
-                .fields
-                .quoteNumber
-            );
-
-
-          const secondNumber =
-            Number(
-              second
-                .payload
-                .fields
-                .quoteNumber
-            );
-
-
-          return (
-            firstNumber -
-            secondNumber
-          );
-        }
-      );
-
-
-  const timestamp =
-    Date.now();
-
-
-  numberedOffers.forEach(
-    (
-      offer,
-      index
-    ) => {
-      const newQuoteNumber =
-        String(
-          index + 1
-        ).padStart(
-          4,
-          '0'
-        );
-
-
-      const oldQuoteNumber =
-        String(
-          offer
-            .payload
-            .fields
-            .quoteNumber ||
-          ''
-        ).trim();
-
-
-      /*
-       * لا نعدل العرض إذا كان
-       * رقمه صحيحاً بالفعل.
-       */
-      if (
-        oldQuoteNumber ===
-        newQuoteNumber
-      ) {
-        return;
-      }
-
-
-      offer
-        .payload
-        .fields
-        .quoteNumber =
-          newQuoteNumber;
-
-
-      /*
-       * نحدث عنوان العرض أيضاً
-       * حتى يظهر الرقم الجديد
-       * في قائمة العروض المحفوظة.
-       */
-      offer.title =
-        rebuildOfferTitle(
-          offer
-        );
-
-
-      /*
-       * مهم للمزامنة مع Google Drive.
-       * نحدث updatedAt حتى يعرف النظام
-       * أن النسخة الجديدة هي الأحدث.
-       */
-      offer.updatedAt =
-        new Date(
-          timestamp +
-          index
-        ).toISOString();
-    }
-  );
-
-
-  return result;
-}
-
-function ensureUniqueCurrentQuoteNumber() {
-  const input =
-    $('#quoteNumber');
-
-
-  if (
-    !input
-  ) {
-    return '';
-  }
-
-
-  const currentValue =
-    String(
-      input.value ||
-      ''
-    ).trim();
-
-
-  /*
-   * نحافظ على أرقام العروض القديمة
-   * إذا كانت بصيغة غير رقمية.
-   */
-  if (
-    currentValue &&
-    !/^\d+$/.test(
-      currentValue
-    )
-  ) {
-    return currentValue;
-  }
-
-
-  const preferredNumber =
-    currentValue ||
-    '0001';
-
-
-  const uniqueNumber =
-    getAvailableQuoteNumber(
-      preferredNumber,
-      activeOfferId
-    );
-
-
-  input.value =
-    uniqueNumber;
-
-
-  return uniqueNumber;
-}
     try {
       const offers =
         JSON.parse(
@@ -7295,9 +6911,437 @@ function ensureUniqueCurrentQuoteNumber() {
       return [];
     }
   }
-/* =========================================================
-   QUOTE NUMBER SEQUENCE
-   ========================================================= */
+
+
+  /* =========================================================
+     QUOTE NUMBER SYSTEM
+     ========================================================= */
+
+  function formatQuoteNumber(
+    value
+  ) {
+    const number =
+      Math.max(
+        1,
+        Number(value) || 1
+      );
+
+
+    return String(
+      number
+    ).padStart(
+      4,
+      '0'
+    );
+  }
+
+
+  function getQuoteNumberFromOffer(
+    offer
+  ) {
+    return String(
+      offer
+        ?.payload
+        ?.fields
+        ?.quoteNumber ||
+      ''
+    ).trim();
+  }
+
+
+  function getUsedQuoteNumbers(
+    excludeOfferId = null
+  ) {
+    const used =
+      new Set();
+
+
+    readSavedOffers()
+      .forEach(
+        offer => {
+          if (
+            excludeOfferId &&
+            offer.id ===
+            excludeOfferId
+          ) {
+            return;
+          }
+
+
+          const quoteNumber =
+            getQuoteNumberFromOffer(
+              offer
+            );
+
+
+          if (
+            !/^\d+$/.test(
+              quoteNumber
+            )
+          ) {
+            return;
+          }
+
+
+          used.add(
+            Number(
+              quoteNumber
+            )
+          );
+        }
+      );
+
+
+    return used;
+  }
+
+
+  function getAvailableQuoteNumber(
+    preferredNumber = '0001',
+    excludeOfferId = null
+  ) {
+    const used =
+      getUsedQuoteNumbers(
+        excludeOfferId
+      );
+
+
+    let candidate =
+      Math.max(
+        1,
+        Number(
+          preferredNumber
+        ) || 1
+      );
+
+
+    while (
+      used.has(
+        candidate
+      )
+    ) {
+      candidate +=
+        1;
+    }
+
+
+    return formatQuoteNumber(
+      candidate
+    );
+  }
+
+
+  function getNextQuoteNumber() {
+    const used =
+      getUsedQuoteNumbers();
+
+
+    let number =
+      1;
+
+
+    while (
+      used.has(
+        number
+      )
+    ) {
+      number +=
+        1;
+    }
+
+
+    return formatQuoteNumber(
+      number
+    );
+  }
+
+
+  function ensureUniqueCurrentQuoteNumber() {
+    const input =
+      $('#quoteNumber');
+
+
+    if (
+      !input
+    ) {
+      return '';
+    }
+
+
+    const currentValue =
+      String(
+        input.value ||
+        ''
+      ).trim();
+
+
+    if (
+      !currentValue
+    ) {
+      const newNumber =
+        getNextQuoteNumber();
+
+
+      input.value =
+        newNumber;
+
+
+      return newNumber;
+    }
+
+
+    if (
+      !/^\d+$/.test(
+        currentValue
+      )
+    ) {
+      const newNumber =
+        getNextQuoteNumber();
+
+
+      input.value =
+        newNumber;
+
+
+      return newNumber;
+    }
+
+
+    const uniqueNumber =
+      getAvailableQuoteNumber(
+        currentValue,
+        activeOfferId
+      );
+
+
+    input.value =
+      uniqueNumber;
+
+
+    return uniqueNumber;
+  }
+
+
+  function rebuildOfferTitle(
+    offer
+  ) {
+    const fields =
+      offer
+        ?.payload
+        ?.fields ||
+      {};
+
+
+    const quoteNumber =
+      String(
+        fields.quoteNumber ||
+        ''
+      ).trim();
+
+
+    const clientName =
+      String(
+        fields.clientName ||
+        ''
+      ).trim();
+
+
+    const destination =
+      String(
+        fields.destination ||
+        ''
+      ).trim();
+
+
+    return (
+      [
+        quoteNumber,
+        clientName
+      ]
+        .filter(
+          Boolean
+        )
+        .join(
+          ' - '
+        ) ||
+      destination ||
+      'عرض جديد'
+    );
+  }
+
+
+  function renumberOffersSequentially(
+    offers
+  ) {
+    const result =
+      structuredClone(
+        offers
+      );
+
+
+    const numberedOffers =
+      result
+        .filter(
+          offer => {
+            const quoteNumber =
+              getQuoteNumberFromOffer(
+                offer
+              );
+
+
+            return /^\d+$/.test(
+              quoteNumber
+            );
+          }
+        )
+        .sort(
+          (
+            first,
+            second
+          ) => {
+            const firstNumber =
+              Number(
+                getQuoteNumberFromOffer(
+                  first
+                )
+              );
+
+
+            const secondNumber =
+              Number(
+                getQuoteNumberFromOffer(
+                  second
+                )
+              );
+
+
+            if (
+              firstNumber !==
+              secondNumber
+            ) {
+              return (
+                firstNumber -
+                secondNumber
+              );
+            }
+
+
+            return (
+              (
+                Date.parse(
+                  first.createdAt ||
+                  ''
+                ) ||
+                0
+              ) -
+              (
+                Date.parse(
+                  second.createdAt ||
+                  ''
+                ) ||
+                0
+              )
+            );
+          }
+        );
+
+
+    const now =
+      Date.now();
+
+
+    numberedOffers.forEach(
+      (
+        offer,
+        index
+      ) => {
+        const newQuoteNumber =
+          formatQuoteNumber(
+            index + 1
+          );
+
+
+        const oldQuoteNumber =
+          getQuoteNumberFromOffer(
+            offer
+          );
+
+
+        if (
+          oldQuoteNumber ===
+          newQuoteNumber
+        ) {
+          return;
+        }
+
+
+        if (
+          !offer.payload
+        ) {
+          offer.payload =
+            {};
+        }
+
+
+        if (
+          !offer.payload.fields
+        ) {
+          offer.payload.fields =
+            {};
+        }
+
+
+        offer
+          .payload
+          .fields
+          .quoteNumber =
+            newQuoteNumber;
+
+
+        offer.title =
+          rebuildOfferTitle(
+            offer
+          );
+
+
+        offer.updatedAt =
+          new Date(
+            now +
+            index
+          ).toISOString();
+      }
+    );
+
+
+    return result;
+  }
+
+
+  function sanitizeOffers(
+    offers
+  ) {
+    return structuredClone(
+      Array.isArray(
+        offers
+      )
+        ? offers
+        : []
+    ).map(
+      offer => {
+        if (
+          offer
+            ?.payload
+            ?.state
+        ) {
+          delete offer.payload.state.copy;
+        }
+
+
+        return offer;
+      }
+    );
+  }
+
 
   function writeSavedOffers(
     offers,
@@ -7309,11 +7353,17 @@ function ensureUniqueCurrentQuoteNumber() {
       options;
 
 
+    const cleanOffers =
+      sanitizeOffers(
+        offers
+      );
+
+
     localStorage.setItem(
       OFFERS_STORAGE_KEY,
 
       JSON.stringify(
-        offers
+        cleanOffers
       )
     );
 
@@ -7322,7 +7372,7 @@ function ensureUniqueCurrentQuoteNumber() {
       syncDrive
     ) {
       scheduleDriveSync(
-        offers
+        cleanOffers
       );
     }
   }
@@ -7395,20 +7445,16 @@ function ensureUniqueCurrentQuoteNumber() {
 
 
   function saveDraft(
-  silent = false
-) {
-  ensureStateStructure();
+    silent = false
+  ) {
+    ensureStateStructure();
 
 
-  /*
-   * الرقم يبقى كما هو إذا كان فريداً.
-   * يتغير فقط إذا وجد عرض آخر بنفس الرقم.
-   */
-  ensureUniqueCurrentQuoteNumber();
+    ensureUniqueCurrentQuoteNumber();
 
 
-  const offers =
-    readSavedOffers();
+    const offers =
+      readSavedOffers();
 
 
     let existing =
@@ -7424,6 +7470,10 @@ function ensureUniqueCurrentQuoteNumber() {
     ) {
       activeOfferId =
         createOfferId();
+
+
+      existing =
+        null;
     }
 
 
@@ -7589,6 +7639,10 @@ function ensureUniqueCurrentQuoteNumber() {
       ) {
         delete payload.state.copy;
       }
+
+
+      payload.fields.quoteNumber =
+        '0001';
 
 
       const id =
@@ -7990,24 +8044,15 @@ function ensureUniqueCurrentQuoteNumber() {
 
 
     if (
-  !payload.fields
-) {
-  payload.fields = {};
-}
+      !payload.fields
+    ) {
+      payload.fields =
+        {};
+    }
 
 
-if (
-  !payload.fields
-) {
-  payload.fields = {};
-}
-
-
-payload.fields.quoteNumber =
-  getAvailableQuoteNumber(
-    payload.fields.quoteNumber ||
-    '0001'
-  );
+    payload.fields.quoteNumber =
+      getNextQuoteNumber();
 
 
     const newId =
@@ -8043,157 +8088,128 @@ payload.fields.quoteNumber =
 
 
   function deleteOffer(
-  id
-) {
-  const offers =
-    readSavedOffers();
-
-
-  const offer =
-    offers.find(
-      item =>
-        item.id ===
-        id
-    );
-
-
-  if (
-    !offer
-  ) {
-    return;
-  }
-
-
-  const quoteNumber =
-    String(
-      offer
-        ?.payload
-        ?.fields
-        ?.quoteNumber ||
-      ''
-    ).trim();
-
-
-  const confirmed =
-    window.confirm(
-      `هل تريد حذف العرض ${
-        quoteNumber
-          ? `رقم ${quoteNumber}`
-          : `"${offer.title}"`
-      }؟`
-    );
-
-
-  if (
-    !confirmed
-  ) {
-    return;
-  }
-
-
-  /*
-   * أولاً نحذف العرض المطلوب.
-   */
-  const remainingOffers =
-    offers.filter(
-      item =>
-        item.id !==
-        id
-    );
-
-
-  /*
-   * بعدها نعيد ترتيب جميع الأرقام
-   * من 0001 بدون أي فراغات.
-   */
-  const renumberedOffers =
-    renumberOffersSequentially(
-      remainingOffers
-    );
-
-
-  /*
-   * الحفظ محلياً والمزامنة
-   * مع Google Drive.
-   */
-  writeSavedOffers(
-    renumberedOffers
-  );
-
-
-  /*
-   * إذا كان العرض المحذوف
-   * هو العرض المفتوح حالياً.
-   */
-  if (
-    activeOfferId ===
     id
   ) {
-    activeOfferId =
-      null;
+    const offers =
+      readSavedOffers();
 
 
-    currentOfferTouched =
-      false;
-
-
-    localStorage.removeItem(
-      ACTIVE_OFFER_KEY
-    );
-
-
-    startNewOffer(
-      false
-    );
-  } else {
-    /*
-     * إذا كان العرض المفتوح لم يحذف
-     * ولكن رقمه تغير بسبب إعادة الترتيب،
-     * نحدث الرقم الظاهر في الشاشة.
-     */
-    const activeOffer =
-      renumberedOffers.find(
+    const offer =
+      offers.find(
         item =>
           item.id ===
-          activeOfferId
+          id
       );
 
 
     if (
-      activeOffer
+      !offer
     ) {
-      const newActiveQuoteNumber =
-        activeOffer
-          ?.payload
-          ?.fields
-          ?.quoteNumber;
+      return;
+    }
+
+
+    const quoteNumber =
+      getQuoteNumberFromOffer(
+        offer
+      );
+
+
+    const confirmed =
+      window.confirm(
+        quoteNumber
+          ? `هل تريد حذف العرض رقم ${quoteNumber}؟`
+          : `هل تريد حذف "${offer.title}"؟`
+      );
+
+
+    if (
+      !confirmed
+    ) {
+      return;
+    }
+
+
+    const remainingOffers =
+      offers.filter(
+        item =>
+          item.id !==
+          id
+      );
+
+
+    const renumberedOffers =
+      renumberOffersSequentially(
+        remainingOffers
+      );
+
+
+    writeSavedOffers(
+      renumberedOffers
+    );
+
+
+    if (
+      activeOfferId ===
+      id
+    ) {
+      activeOfferId =
+        null;
+
+
+      currentOfferTouched =
+        false;
+
+
+      localStorage.removeItem(
+        ACTIVE_OFFER_KEY
+      );
+
+
+      startNewOffer(
+        false
+      );
+    } else {
+      const activeOffer =
+        renumberedOffers.find(
+          item =>
+            item.id ===
+            activeOfferId
+        );
 
 
       if (
-        newActiveQuoteNumber &&
-        $('#quoteNumber')
+        activeOffer
       ) {
-        $('#quoteNumber').value =
-          newActiveQuoteNumber;
+        const activeQuoteNumber =
+          getQuoteNumberFromOffer(
+            activeOffer
+          );
+
+
+        if (
+          $('#quoteNumber')
+        ) {
+          $('#quoteNumber').value =
+            activeQuoteNumber;
+        }
+
+
+        updateActiveOfferStatus();
       }
-
-
-      updateActiveOfferStatus();
     }
+
+
+    renderSavedOffers(
+      $('#savedOffersSearch')?.value ||
+      ''
+    );
+
+
+    toast(
+      'تم حذف العرض وإعادة ترتيب الأرقام'
+    );
   }
-
-
-  renderSavedOffers(
-    $('#savedOffersSearch')
-      ?.value ||
-    ''
-  );
-
-
-  toast(
-    'تم حذف العرض وإعادة ترتيب أرقام العروض'
-  );
-}
 
 
   function startNewOffer(
@@ -8250,13 +8266,11 @@ payload.fields.quoteNumber =
 
 
     const values = {
-  quoteNumber:
-  getAvailableQuoteNumber(
-    '0001'
-  ),
+      quoteNumber:
+        getNextQuoteNumber(),
 
-  clientName:
-    '',
+      clientName:
+        '',
 
       origin:
         '',
@@ -8265,7 +8279,7 @@ payload.fields.quoteNumber =
         '',
 
       hotelStars:
-        '4–5',
+        '4-5',
 
       startDate:
         '',
@@ -9139,20 +9153,8 @@ payload.fields.quoteNumber =
   function sanitizeOffersForCloud(
     offers
   ) {
-    return structuredClone(
+    return sanitizeOffers(
       offers
-    ).map(
-      offer => {
-        if (
-          offer.payload
-            ?.state
-        ) {
-          delete offer.payload.state.copy;
-        }
-
-
-        return offer;
-      }
     );
   }
 
@@ -9199,7 +9201,7 @@ payload.fields.quoteNumber =
       JSON.stringify(
         {
           version:
-            2,
+            3,
 
           updatedAt:
             new Date()
@@ -9336,19 +9338,9 @@ payload.fields.quoteNumber =
           );
 
 
-    offers.forEach(
-      offer => {
-        if (
-          offer.payload
-            ?.state
-        ) {
-          delete offer.payload.state.copy;
-        }
-      }
+    return sanitizeOffers(
+      offers
     );
-
-
-    return offers;
   }
 
 
@@ -9378,7 +9370,7 @@ payload.fields.quoteNumber =
       JSON.stringify(
         {
           version:
-            2,
+            3,
 
           updatedAt:
             new Date()
@@ -9547,8 +9539,23 @@ payload.fields.quoteNumber =
         remoteOffers ===
         null
       ) {
+        const normalized =
+          renumberOffersSequentially(
+            localOffers
+          );
+
+
+        writeSavedOffers(
+          normalized,
+          {
+            syncDrive:
+              false
+          }
+        );
+
+
         await createDriveOffersFile(
-          localOffers
+          normalized
         );
 
 
@@ -9574,8 +9581,18 @@ payload.fields.quoteNumber =
         );
 
 
+      /*
+       * بعد الدمج نحل أي تكرار أو فراغ
+       * في أرقام العروض.
+       */
+      const normalized =
+        renumberOffersSequentially(
+          merged
+        );
+
+
       writeSavedOffers(
-        merged,
+        normalized,
         {
           syncDrive:
             false
@@ -9584,7 +9601,7 @@ payload.fields.quoteNumber =
 
 
       await writeOffersToDrive(
-        merged
+        normalized
       );
 
 
@@ -9593,15 +9610,14 @@ payload.fields.quoteNumber =
           ?.open
       ) {
         renderSavedOffers(
-          $('#savedOffersSearch')
-            ?.value ||
+          $('#savedOffersSearch')?.value ||
           ''
         );
       }
 
 
       const active =
-        merged.find(
+        normalized.find(
           offer =>
             offer.id ===
             activeOfferId
@@ -10149,13 +10165,11 @@ payload.fields.quoteNumber =
 
 
         if (
-  $('#quoteNumber')
-) {
-  $('#quoteNumber').value =
-  getAvailableQuoteNumber(
-    '0001'
-  );
-}
+          $('#quoteNumber')
+        ) {
+          $('#quoteNumber').value =
+            getNextQuoteNumber();
+        }
 
 
         if (
@@ -10238,8 +10252,7 @@ payload.fields.quoteNumber =
   function exportFileBase() {
     const quote =
       (
-        $('#quoteNumber')
-          ?.value ||
+        $('#quoteNumber')?.value ||
         ''
       )
         .trim()
@@ -10340,433 +10353,346 @@ payload.fields.quoteNumber =
   /* =========================================================
      OFFER CANVAS
      ========================================================= */
-/* =========================================================
-   INLINE IMAGES FOR PDF CAPTURE
-   ========================================================= */
+
   async function renderOfferCanvas() {
-  if (
-    document.fonts?.ready
-  ) {
-    await document.fonts.ready;
-  }
+    if (
+      document.fonts?.ready
+    ) {
+      await document.fonts.ready;
+    }
 
 
-  const source =
-    $('#offerSheet');
+    const source =
+      $('#offerSheet');
 
 
-  if (
-    !source
-  ) {
-    throw new Error(
-      'تعذر العثور على عرض العميل'
-    );
-  }
+    if (
+      !source
+    ) {
+      throw new Error(
+        'تعذر العثور على عرض العميل'
+      );
+    }
 
 
-  await nextFrame();
+    await nextFrame();
 
 
-  /*
-   * ننتظر تحميل الشعارات الأصلية
-   * قبل بدء تصوير العرض.
-   */
-  const sourceLogos = [
-    ...source.querySelectorAll(
-      '.brand-logo-image'
-    )
-  ];
+    const sourceLogos = [
+      ...source.querySelectorAll(
+        '.brand-logo-image'
+      )
+    ];
 
 
-  await Promise.all(
-    sourceLogos.map(
-      async logo => {
-        try {
-          if (
-            !logo.complete ||
-            !logo.naturalWidth
-          ) {
-            await logo.decode();
-          }
-        } catch (
-          error
-        ) {
-          console.warn(
-            '[Logo decode]',
+    await Promise.all(
+      sourceLogos.map(
+        async logo => {
+          try {
+            if (
+              !logo.complete ||
+              !logo.naturalWidth
+            ) {
+              await logo.decode();
+            }
+          } catch (
             error
-          );
-        }
-      }
-    )
-  );
-
-
-  const sourceRect =
-    source.getBoundingClientRect();
-
-
-  const width =
-    Math.ceil(
-      sourceRect.width
-    );
-
-
-  const height =
-    Math.ceil(
-      source.scrollHeight
-    );
-
-
-  if (
-    !width ||
-    !height
-  ) {
-    throw new Error(
-      'عرض العميل غير جاهز'
-    );
-  }
-
-
-  /*
-   * نحفظ مكان كل شعار بالنسبة للعرض.
-   * سنرسمه لاحقاً مباشرة على Canvas.
-   */
-  const capturedLogos =
-    sourceLogos
-      .filter(
-        logo =>
-          logo.complete &&
-          logo.naturalWidth >
-            0 &&
-          logo.naturalHeight >
-            0
-      )
-      .map(
-        logo => {
-          const rect =
-            logo.getBoundingClientRect();
-
-
-          const style =
-            getComputedStyle(
-              logo
+          ) {
+            console.warn(
+              '[Logo decode]',
+              error
             );
-
-
-          return {
-            element:
-              logo,
-
-            x:
-              rect.left -
-              sourceRect.left,
-
-            y:
-              rect.top -
-              sourceRect.top,
-
-            width:
-              rect.width,
-
-            height:
-              rect.height,
-
-            objectFit:
-              style.objectFit ||
-              'contain'
-          };
+          }
         }
+      )
+    );
+
+
+    const sourceRect =
+      source.getBoundingClientRect();
+
+
+    const width =
+      Math.ceil(
+        sourceRect.width
       );
 
 
-  const protectedRects =
-    [];
-
-
-  function protect(
-    element
-  ) {
-    if (
-      !element ||
-      element.hidden
-    ) {
-      return;
-    }
-
-
-    const rect =
-      element.getBoundingClientRect();
-
-
-    if (
-      rect.height <=
-      2
-    ) {
-      return;
-    }
-
-
-    protectedRects.push({
-      top:
-        rect.top -
-        sourceRect.top,
-
-      bottom:
-        rect.bottom -
-        sourceRect.top,
-
-      height:
-        rect.height
-    });
-  }
-
-
-  source
-    .querySelectorAll(
-      [
-        '.client-flight-leg',
-        '.hotel-client-item',
-        '#clientTransfers .included-item',
-        '#clientActivities .included-item',
-        '.client-day',
-        '.price-section',
-        '.terms-section',
-        '.offer-footer'
-      ].join(',')
-    )
-    .forEach(
-      protect
-    );
-
-
-  source
-    .querySelectorAll(
-      '.client-hotel-city'
-    )
-    .forEach(
-      city => {
-        const heading =
-          city.querySelector(
-            ':scope > h3'
-          );
-
-
-        const firstHotel =
-          city.querySelector(
-            '.hotel-client-item'
-          );
-
-
-        if (
-          !heading ||
-          !firstHotel
-        ) {
-          return;
-        }
-
-
-        const headingRect =
-          heading
-            .getBoundingClientRect();
-
-
-        const hotelRect =
-          firstHotel
-            .getBoundingClientRect();
-
-
-        const top =
-          Math.min(
-            headingRect.top,
-            hotelRect.top
-          ) -
-          sourceRect.top;
-
-
-        const bottom =
-          Math.max(
-            headingRect.bottom,
-            hotelRect.bottom
-          ) -
-          sourceRect.top;
-
-
-        protectedRects.push({
-          top,
-          bottom,
-
-          height:
-            bottom -
-            top
-        });
-      }
-    );
-
-
-  const finalStart =
-    source
-      .querySelector(
-        '#clientPriceSection:not([hidden])'
-      )
-      ?.getBoundingClientRect() ||
-    source
-      .querySelector(
-        '#clientNotesSection:not([hidden])'
-      )
-      ?.getBoundingClientRect() ||
-    source
-      .querySelector(
-        '.offer-footer'
-      )
-      ?.getBoundingClientRect();
-
-
-  const footer =
-    source
-      .querySelector(
-        '.offer-footer'
-      )
-      ?.getBoundingClientRect();
-
-
-  /*
-   * ننسخ عرض العميل.
-   */
-  const clone =
-    source.cloneNode(
-      true
-    );
-
-
-  clone.dir =
-    'rtl';
-
-
-  const originals = [
-    source,
-    ...source.querySelectorAll(
-      '*'
-    )
-  ];
-
-
-  const copies = [
-    clone,
-    ...clone.querySelectorAll(
-      '*'
-    )
-  ];
-
-
-  const pseudoRules =
-    [];
-
-
-  for (
-    let index =
-      0;
-
-    index <
-    originals.length;
-
-    index +=
-      1
-  ) {
-    const original =
-      originals[
-        index
-      ];
-
-
-    const copy =
-      copies[
-        index
-      ];
-
-
-    const computed =
-      getComputedStyle(
-        original
+    const height =
+      Math.ceil(
+        source.scrollHeight
       );
 
 
-    copy.removeAttribute(
-      'style'
-    );
-
-
-    for (
-      let styleIndex =
-        0;
-
-      styleIndex <
-      computed.length;
-
-      styleIndex +=
-        1
+    if (
+      !width ||
+      !height
     ) {
-      const property =
-        computed.item(
-          styleIndex
-        );
+      throw new Error(
+        'عرض العميل غير جاهز'
+      );
+    }
 
 
-      copy.style.setProperty(
-        property,
-
-        computed.getPropertyValue(
-          property
+    const capturedLogos =
+      sourceLogos
+        .filter(
+          logo =>
+            logo.complete &&
+            logo.naturalWidth >
+              0 &&
+            logo.naturalHeight >
+              0
         )
-      );
-    }
+        .map(
+          logo => {
+            const rect =
+              logo.getBoundingClientRect();
 
 
-    copy.style.setProperty(
-      'animation',
-      'none'
-    );
+            const style =
+              getComputedStyle(
+                logo
+              );
 
 
-    copy.style.setProperty(
-      'transition',
-      'none'
-    );
+            return {
+              element:
+                logo,
 
+              x:
+                rect.left -
+                sourceRect.left,
 
-    copy.setAttribute(
-      'data-capture-id',
-      String(
-        index
-      )
-    );
+              y:
+                rect.top -
+                sourceRect.top,
 
+              width:
+                rect.width,
 
-    for (
-      const pseudo of [
-        '::before',
-        '::after'
-      ]
-    ) {
-      const style =
-        getComputedStyle(
-          original,
-          pseudo
+              height:
+                rect.height,
+
+              objectFit:
+                style.objectFit ||
+                'contain'
+            };
+          }
         );
+
+
+    const protectedRects =
+      [];
+
+
+    function protect(
+      element
+    ) {
+      if (
+        !element ||
+        element.hidden
+      ) {
+        return;
+      }
+
+
+      const rect =
+        element.getBoundingClientRect();
 
 
       if (
-        !style.content ||
-        style.content ===
-          'none' ||
-        style.content ===
-          'normal'
+        rect.height <=
+        2
       ) {
-        continue;
+        return;
       }
 
 
-      const rules =
-        [];
+      protectedRects.push({
+        top:
+          rect.top -
+          sourceRect.top,
+
+        bottom:
+          rect.bottom -
+          sourceRect.top,
+
+        height:
+          rect.height
+      });
+    }
+
+
+    source
+      .querySelectorAll(
+        [
+          '.client-flight-leg',
+          '.hotel-client-item',
+          '#clientTransfers .included-item',
+          '#clientActivities .included-item',
+          '.client-day',
+          '.price-section',
+          '.terms-section',
+          '.offer-footer'
+        ].join(',')
+      )
+      .forEach(
+        protect
+      );
+
+
+    source
+      .querySelectorAll(
+        '.client-hotel-city'
+      )
+      .forEach(
+        city => {
+          const heading =
+            city.querySelector(
+              ':scope > h3'
+            );
+
+
+          const firstHotel =
+            city.querySelector(
+              '.hotel-client-item'
+            );
+
+
+          if (
+            !heading ||
+            !firstHotel
+          ) {
+            return;
+          }
+
+
+          const headingRect =
+            heading
+              .getBoundingClientRect();
+
+
+          const hotelRect =
+            firstHotel
+              .getBoundingClientRect();
+
+
+          const top =
+            Math.min(
+              headingRect.top,
+              hotelRect.top
+            ) -
+            sourceRect.top;
+
+
+          const bottom =
+            Math.max(
+              headingRect.bottom,
+              hotelRect.bottom
+            ) -
+            sourceRect.top;
+
+
+          protectedRects.push({
+            top,
+            bottom,
+
+            height:
+              bottom -
+              top
+          });
+        }
+      );
+
+
+    const finalStart =
+      source
+        .querySelector(
+          '#clientPriceSection:not([hidden])'
+        )
+        ?.getBoundingClientRect() ||
+      source
+        .querySelector(
+          '#clientNotesSection:not([hidden])'
+        )
+        ?.getBoundingClientRect() ||
+      source
+        .querySelector(
+          '.offer-footer'
+        )
+        ?.getBoundingClientRect();
+
+
+    const footer =
+      source
+        .querySelector(
+          '.offer-footer'
+        )
+        ?.getBoundingClientRect();
+
+
+    const clone =
+      source.cloneNode(
+        true
+      );
+
+
+    clone.dir =
+      'rtl';
+
+
+    const originals = [
+      source,
+      ...source.querySelectorAll(
+        '*'
+      )
+    ];
+
+
+    const copies = [
+      clone,
+      ...clone.querySelectorAll(
+        '*'
+      )
+    ];
+
+
+    const pseudoRules =
+      [];
+
+
+    for (
+      let index =
+        0;
+
+      index <
+      originals.length;
+
+      index +=
+        1
+    ) {
+      const original =
+        originals[
+          index
+        ];
+
+
+      const copy =
+        copies[
+          index
+        ];
+
+
+      const computed =
+        getComputedStyle(
+          original
+        );
+
+
+      copy.removeAttribute(
+        'style'
+      );
 
 
       for (
@@ -10774,474 +10700,534 @@ payload.fields.quoteNumber =
           0;
 
         styleIndex <
-        style.length;
+        computed.length;
 
         styleIndex +=
           1
       ) {
         const property =
-          style.item(
+          computed.item(
             styleIndex
           );
 
 
-        rules.push(
-          `${property}:${style.getPropertyValue(property)}`
+        copy.style.setProperty(
+          property,
+
+          computed.getPropertyValue(
+            property
+          )
         );
       }
 
 
-      pseudoRules.push(
-        `[data-capture-id="${index}"]${pseudo}{${rules.join(';')}}`
+      copy.style.setProperty(
+        'animation',
+        'none'
       );
+
+
+      copy.style.setProperty(
+        'transition',
+        'none'
+      );
+
+
+      copy.setAttribute(
+        'data-capture-id',
+        String(
+          index
+        )
+      );
+
+
+      for (
+        const pseudo of [
+          '::before',
+          '::after'
+        ]
+      ) {
+        const style =
+          getComputedStyle(
+            original,
+            pseudo
+          );
+
+
+        if (
+          !style.content ||
+          style.content ===
+            'none' ||
+          style.content ===
+            'normal'
+        ) {
+          continue;
+        }
+
+
+        const rules =
+          [];
+
+
+        for (
+          let styleIndex =
+            0;
+
+          styleIndex <
+          style.length;
+
+          styleIndex +=
+            1
+        ) {
+          const property =
+            style.item(
+              styleIndex
+            );
+
+
+          rules.push(
+            `${property}:${style.getPropertyValue(property)}`
+          );
+        }
+
+
+        pseudoRules.push(
+          `[data-capture-id="${index}"]${pseudo}{${rules.join(';')}}`
+        );
+      }
     }
-  }
 
 
-  /*
-   * مهم جداً:
-   *
-   * نحذف صور الشعار من نسخة SVG حتى لا يظهر
-   * رمز الصورة المكسورة.
-   *
-   * سنرسم الصورة الأصلية لاحقاً على Canvas.
-   */
-  clone
-    .querySelectorAll(
-      '.brand-logo-image'
-    )
-    .forEach(
-      image => {
-        image.removeAttribute(
-          'src'
-        );
+    /*
+     * نخفي الشعار من نسخة SVG.
+     * سيتم رسمه مباشرة على Canvas.
+     */
+    clone
+      .querySelectorAll(
+        '.brand-logo-image'
+      )
+      .forEach(
+        image => {
+          image.removeAttribute(
+            'src'
+          );
 
 
-        image.removeAttribute(
-          'srcset'
-        );
+          image.removeAttribute(
+            'srcset'
+          );
 
 
-        image.style.setProperty(
-          'visibility',
-          'hidden',
-          'important'
-        );
+          image.style.setProperty(
+            'visibility',
+            'hidden',
+            'important'
+          );
 
 
-        image.style.setProperty(
-          'opacity',
-          '0',
-          'important'
-        );
-      }
-    );
-
-
-  clone.style.width =
-    `${width}px`;
-
-
-  clone.style.maxWidth =
-    'none';
-
-
-  clone.style.margin =
-    '0';
-
-
-  clone.style.boxShadow =
-    'none';
-
-
-  const markup =
-    new XMLSerializer()
-      .serializeToString(
-        clone
+          image.style.setProperty(
+            'opacity',
+            '0',
+            'important'
+          );
+        }
       );
 
 
-  const svg = `
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="${width}"
-      height="${height}"
-      viewBox="0 0 ${width} ${height}"
-    >
+    clone.style.width =
+      `${width}px`;
 
-      <foreignObject
-        x="0"
-        y="0"
+
+    clone.style.maxWidth =
+      'none';
+
+
+    clone.style.margin =
+      '0';
+
+
+    clone.style.boxShadow =
+      'none';
+
+
+    const markup =
+      new XMLSerializer()
+        .serializeToString(
+          clone
+        );
+
+
+    const svg = `
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
         width="${width}"
         height="${height}"
+        viewBox="0 0 ${width} ${height}"
       >
 
-        <div
-          xmlns="http://www.w3.org/1999/xhtml"
-          dir="rtl"
-          style="
-            width:${width}px;
-            height:${height}px;
-            margin:0;
-            padding:0;
-            background:#fff;
-          "
+        <foreignObject
+          x="0"
+          y="0"
+          width="${width}"
+          height="${height}"
         >
 
-          <style>
-            ${pseudoRules.join('\n')}
-          </style>
-
-          ${markup}
-
-        </div>
-
-      </foreignObject>
-
-    </svg>
-  `;
-
-
-  const svgBlob =
-    new Blob(
-      [
-        svg
-      ],
-      {
-        type:
-          'image/svg+xml;charset=utf-8'
-      }
-    );
-
-
-  const svgUrl =
-    URL.createObjectURL(
-      svgBlob
-    );
-
-
-  const image =
-    new Image();
-
-
-  try {
-    await new Promise(
-      (
-        resolve,
-        reject
-      ) => {
-        image.onload =
-          resolve;
-
-
-        image.onerror =
-          () => {
-            reject(
-              new Error(
-                'تعذر تحويل العرض إلى صورة'
-              )
-            );
-          };
-
-
-        image.src =
-          svgUrl;
-      }
-    );
-  } finally {
-    URL.revokeObjectURL(
-      svgUrl
-    );
-  }
-
-
-  const maxPixels =
-    64000000;
-
-
-  const scale =
-    Math.max(
-      .5,
-
-      Math.min(
-        2,
-
-        Math.sqrt(
-          maxPixels /
-          (
-            width *
-            height
-          )
-        ),
-
-        30000 /
-        width,
-
-        30000 /
-        height
-      )
-    );
-
-
-  const canvas =
-    document.createElement(
-      'canvas'
-    );
-
-
-  canvas.width =
-    Math.max(
-      1,
-
-      Math.round(
-        width *
-        scale
-      )
-    );
-
-
-  canvas.height =
-    Math.max(
-      1,
-
-      Math.round(
-        height *
-        scale
-      )
-    );
-
-
-  const context =
-    canvas.getContext(
-      '2d',
-      {
-        alpha:
-          false
-      }
-    );
-
-
-  if (
-    !context
-  ) {
-    throw new Error(
-      'تعذر إنشاء صورة العرض'
-    );
-  }
-
-
-  context.fillStyle =
-    '#fff';
-
-
-  context.fillRect(
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  /*
-   * أولاً نرسم نسخة العرض بدون الشعار.
-   */
-  context.drawImage(
-    image,
-    0,
-    0,
-    canvas.width,
-    canvas.height
-  );
-
-
-  /*
-   * الآن نرسم الشعارات الأصلية مباشرة
-   * فوق Canvas.
-   *
-   * هذه الخطوة لا تستخدم SVG أو foreignObject.
-   */
-  capturedLogos.forEach(
-    logo => {
-      const sourceImage =
-        logo.element;
-
-
-      if (
-        !sourceImage.naturalWidth ||
-        !sourceImage.naturalHeight
-      ) {
-        return;
-      }
-
-
-      const boxX =
-        logo.x *
-        scale;
-
-
-      const boxY =
-        logo.y *
-        scale;
-
-
-      const boxWidth =
-        logo.width *
-        scale;
-
-
-      const boxHeight =
-        logo.height *
-        scale;
-
-
-      const imageRatio =
-        sourceImage.naturalWidth /
-        sourceImage.naturalHeight;
-
-
-      const boxRatio =
-        boxWidth /
-        boxHeight;
-
-
-      let drawWidth =
-        boxWidth;
-
-
-      let drawHeight =
-        boxHeight;
-
-
-      let drawX =
-        boxX;
-
-
-      let drawY =
-        boxY;
-
-
-      /*
-       * نحافظ على أبعاد الشعار
-       * مثل object-fit: contain.
-       */
-      if (
-        logo.objectFit ===
-          'contain' ||
-        logo.objectFit ===
-          'scale-down'
-      ) {
-        if (
-          imageRatio >
-          boxRatio
-        ) {
-          drawWidth =
-            boxWidth;
-
-
-          drawHeight =
-            boxWidth /
-            imageRatio;
-
-
-          drawY =
-            boxY +
-            (
-              boxHeight -
-              drawHeight
-            ) /
-            2;
-        } else {
-          drawHeight =
-            boxHeight;
-
-
-          drawWidth =
-            boxHeight *
-            imageRatio;
-
-
-          drawX =
-            boxX +
-            (
-              boxWidth -
-              drawWidth
-            ) /
-            2;
+          <div
+            xmlns="http://www.w3.org/1999/xhtml"
+            dir="rtl"
+            style="
+              width:${width}px;
+              height:${height}px;
+              margin:0;
+              padding:0;
+              background:#fff;
+            "
+          >
+
+            <style>
+              ${pseudoRules.join('\n')}
+            </style>
+
+            ${markup}
+
+          </div>
+
+        </foreignObject>
+
+      </svg>
+    `;
+
+
+    const svgBlob =
+      new Blob(
+        [
+          svg
+        ],
+        {
+          type:
+            'image/svg+xml;charset=utf-8'
         }
-      }
+      );
 
 
-      context.drawImage(
-        sourceImage,
-        drawX,
-        drawY,
-        drawWidth,
-        drawHeight
+    const svgUrl =
+      URL.createObjectURL(
+        svgBlob
+      );
+
+
+    const image =
+      new Image();
+
+
+    try {
+      await new Promise(
+        (
+          resolve,
+          reject
+        ) => {
+          image.onload =
+            resolve;
+
+
+          image.onerror =
+            () => {
+              reject(
+                new Error(
+                  'تعذر تحويل العرض إلى صورة'
+                )
+              );
+            };
+
+
+          image.src =
+            svgUrl;
+        }
+      );
+    } finally {
+      URL.revokeObjectURL(
+        svgUrl
       );
     }
-  );
 
 
-  canvas.offerLayout = {
-    scale,
+    const maxPixels =
+      64000000;
 
-    protectedRanges:
-      protectedRects.map(
-        rect => ({
-          top:
-            Math.round(
-              rect.top *
-              scale
-            ),
 
-          bottom:
-            Math.round(
-              rect.bottom *
-              scale
-            ),
+    const scale =
+      Math.max(
+        .5,
 
-          height:
-            Math.round(
-              rect.height *
-              scale
+        Math.min(
+          2,
+
+          Math.sqrt(
+            maxPixels /
+            (
+              width *
+              height
             )
-        })
-      ),
+          ),
 
-    finalBlockTop:
-      finalStart
-        ? Math.max(
-            0,
+          30000 /
+          width,
 
-            Math.round(
+          30000 /
+          height
+        )
+      );
+
+
+    const canvas =
+      document.createElement(
+        'canvas'
+      );
+
+
+    canvas.width =
+      Math.max(
+        1,
+
+        Math.round(
+          width *
+          scale
+        )
+      );
+
+
+    canvas.height =
+      Math.max(
+        1,
+
+        Math.round(
+          height *
+          scale
+        )
+      );
+
+
+    const context =
+      canvas.getContext(
+        '2d',
+        {
+          alpha:
+            false
+        }
+      );
+
+
+    if (
+      !context
+    ) {
+      throw new Error(
+        'تعذر إنشاء صورة العرض'
+      );
+    }
+
+
+    context.fillStyle =
+      '#fff';
+
+
+    context.fillRect(
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+
+    context.drawImage(
+      image,
+      0,
+      0,
+      canvas.width,
+      canvas.height
+    );
+
+
+    /*
+     * رسم الشعار مباشرة فوق Canvas.
+     */
+    capturedLogos.forEach(
+      logo => {
+        const sourceImage =
+          logo.element;
+
+
+        if (
+          !sourceImage.naturalWidth ||
+          !sourceImage.naturalHeight
+        ) {
+          return;
+        }
+
+
+        const boxX =
+          logo.x *
+          scale;
+
+
+        const boxY =
+          logo.y *
+          scale;
+
+
+        const boxWidth =
+          logo.width *
+          scale;
+
+
+        const boxHeight =
+          logo.height *
+          scale;
+
+
+        const imageRatio =
+          sourceImage.naturalWidth /
+          sourceImage.naturalHeight;
+
+
+        const boxRatio =
+          boxWidth /
+          boxHeight;
+
+
+        let drawWidth =
+          boxWidth;
+
+
+        let drawHeight =
+          boxHeight;
+
+
+        let drawX =
+          boxX;
+
+
+        let drawY =
+          boxY;
+
+
+        if (
+          logo.objectFit ===
+            'contain' ||
+          logo.objectFit ===
+            'scale-down'
+        ) {
+          if (
+            imageRatio >
+            boxRatio
+          ) {
+            drawWidth =
+              boxWidth;
+
+
+            drawHeight =
+              boxWidth /
+              imageRatio;
+
+
+            drawY =
+              boxY +
               (
-                finalStart.top -
-                sourceRect.top
-              ) *
-              scale
-            )
-          )
-        : null,
+                boxHeight -
+                drawHeight
+              ) /
+              2;
+          } else {
+            drawHeight =
+              boxHeight;
 
-    finalBlockBottom:
-      footer
-        ? Math.min(
-            canvas.height,
 
-            Math.round(
+            drawWidth =
+              boxHeight *
+              imageRatio;
+
+
+            drawX =
+              boxX +
               (
-                footer.bottom -
-                sourceRect.top
-              ) *
-              scale
+                boxWidth -
+                drawWidth
+              ) /
+              2;
+          }
+        }
+
+
+        context.drawImage(
+          sourceImage,
+          drawX,
+          drawY,
+          drawWidth,
+          drawHeight
+        );
+      }
+    );
+
+
+    canvas.offerLayout = {
+      scale,
+
+      protectedRanges:
+        protectedRects.map(
+          rect => ({
+            top:
+              Math.round(
+                rect.top *
+                scale
+              ),
+
+            bottom:
+              Math.round(
+                rect.bottom *
+                scale
+              ),
+
+            height:
+              Math.round(
+                rect.height *
+                scale
+              )
+          })
+        ),
+
+      finalBlockTop:
+        finalStart
+          ? Math.max(
+              0,
+
+              Math.round(
+                (
+                  finalStart.top -
+                  sourceRect.top
+                ) *
+                scale
+              )
             )
-          )
-        : null
-  };
+          : null,
+
+      finalBlockBottom:
+        footer
+          ? Math.min(
+              canvas.height,
+
+              Math.round(
+                (
+                  footer.bottom -
+                  sourceRect.top
+                ) *
+                scale
+              )
+            )
+          : null
+    };
 
 
-  return canvas;
-}
+    return canvas;
+  }
 
 
   /* =========================================================
@@ -12643,8 +12629,7 @@ payload.fields.quoteNumber =
 
     try {
       if (
-        document.fonts
-          ?.ready
+        document.fonts?.ready
       ) {
         await document.fonts.ready;
       }
@@ -13027,6 +13012,7 @@ payload.fields.quoteNumber =
         const text =
           `${defaultCopy.brandName}\n` +
           `${getUserName()}\n` +
+          `رقم العرض: ${$('#quoteNumber')?.value || ''}\n` +
           `العميل: ${$('#clientName')?.value || 'ضيفنا الكريم'}\n` +
           `الوجهة: ${$('#destination')?.value || ''}\n` +
           `المدة: ${$('#durationDisplay')?.value || ''}\n\n` +
@@ -13080,10 +13066,6 @@ payload.fields.quoteNumber =
       }
 
 
-      /*
-       * اسم المستخدم إعداد محلي مستقل.
-       * لا نربطه بحفظ العرض.
-       */
       if (
         event.target.dataset
           ?.copyKey ===
@@ -13238,29 +13220,24 @@ payload.fields.quoteNumber =
   renderAll();
 
 
-const existingOfferLoaded =
-  loadDraft();
+  const existingOfferLoaded =
+    loadDraft();
 
 
-if (
-  !existingOfferLoaded &&
-  $('#quoteNumber')
-) {
-  $('#quoteNumber').value =
-    nextQuoteNumber();
+  /*
+   * إذا لا يوجد أي عرض محفوظ،
+   * أول رقم يبدأ من 0001.
+   */
+  if (
+    !existingOfferLoaded &&
+    $('#quoteNumber')
+  ) {
+    $('#quoteNumber').value =
+      getNextQuoteNumber();
+  }
 
 
-  currentOfferTouched =
-    true;
-
-
-  saveDraft(
-    true
-  );
-}
-
-
-updateActiveOfferStatus();
+  updateActiveOfferStatus();
 
 
   updateNewServiceScheduleFields();
@@ -13271,10 +13248,6 @@ updateActiveOfferStatus();
   );
 
 
-  /*
-   * تجهيز Google Identity بدون فتح
-   * تسجيل الدخول تلقائياً.
-   */
   initGoogleDrive()
     .catch(
       error => {
