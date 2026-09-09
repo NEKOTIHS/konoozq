@@ -41,8 +41,7 @@
     'konooz-tourism-active-offer-v1';
 
 
-    const QUOTE_SEQUENCE_KEY =
-  'konooz-quote-sequence-v1';
+  
 
 
   const USER_NAME_KEY =
@@ -6926,6 +6925,357 @@ $$('.brand-mark')
 
 
   function readSavedOffers() {
+    /* =========================================================
+   UNIQUE QUOTE NUMBER
+   ========================================================= */
+
+function formatQuoteNumber(
+  value
+) {
+  const number =
+    Math.max(
+      1,
+      Number(value) || 1
+    );
+
+
+  return String(
+    number
+  ).padStart(
+    4,
+    '0'
+  );
+}
+
+
+function getUsedQuoteNumbers(
+  excludeOfferId = null
+) {
+  const used =
+    new Set();
+
+
+  readSavedOffers()
+    .forEach(
+      offer => {
+        if (
+          excludeOfferId &&
+          offer.id ===
+          excludeOfferId
+        ) {
+          return;
+        }
+
+
+        const quoteNumber =
+          String(
+            offer
+              ?.payload
+              ?.fields
+              ?.quoteNumber ||
+            ''
+          ).trim();
+
+
+        if (
+          !/^\d+$/.test(
+            quoteNumber
+          )
+        ) {
+          return;
+        }
+
+
+        used.add(
+          Number(
+            quoteNumber
+          )
+        );
+      }
+    );
+
+
+  return used;
+}
+
+
+function getAvailableQuoteNumber(
+  preferredNumber = '0001',
+  excludeOfferId = null
+) {
+  const used =
+    getUsedQuoteNumbers(
+      excludeOfferId
+    );
+
+
+  let candidate =
+    Math.max(
+      1,
+      Number(
+        preferredNumber
+      ) || 1
+    );
+
+
+  /*
+   * لا نغير الرقم إلا إذا كان مستخدماً.
+   */
+  while (
+    used.has(
+      candidate
+    )
+  ) {
+    candidate +=
+      1;
+  }
+
+
+  return formatQuoteNumber(
+    candidate
+  );
+}
+/* =========================================================
+   RENUMBER SAVED OFFERS
+   ========================================================= */
+
+function rebuildOfferTitle(
+  offer
+) {
+  const fields =
+    offer
+      ?.payload
+      ?.fields ||
+    {};
+
+
+  const quoteNumber =
+    String(
+      fields.quoteNumber ||
+      ''
+    ).trim();
+
+
+  const clientName =
+    String(
+      fields.clientName ||
+      ''
+    ).trim();
+
+
+  const destination =
+    String(
+      fields.destination ||
+      ''
+    ).trim();
+
+
+  return (
+    [
+      quoteNumber,
+      clientName
+    ]
+      .filter(
+        Boolean
+      )
+      .join(
+        ' - '
+      ) ||
+    destination ||
+    'عرض جديد'
+  );
+}
+
+
+function renumberOffersSequentially(
+  offers
+) {
+  const result =
+    structuredClone(
+      offers
+    );
+
+
+  /*
+   * نأخذ فقط العروض التي تحمل
+   * رقماً رقمياً مثل 0001 و 0002.
+   */
+  const numberedOffers =
+    result
+      .filter(
+        offer => {
+          const quoteNumber =
+            String(
+              offer
+                ?.payload
+                ?.fields
+                ?.quoteNumber ||
+              ''
+            ).trim();
+
+
+          return /^\d+$/.test(
+            quoteNumber
+          );
+        }
+      )
+      .sort(
+        (
+          first,
+          second
+        ) => {
+          const firstNumber =
+            Number(
+              first
+                .payload
+                .fields
+                .quoteNumber
+            );
+
+
+          const secondNumber =
+            Number(
+              second
+                .payload
+                .fields
+                .quoteNumber
+            );
+
+
+          return (
+            firstNumber -
+            secondNumber
+          );
+        }
+      );
+
+
+  const timestamp =
+    Date.now();
+
+
+  numberedOffers.forEach(
+    (
+      offer,
+      index
+    ) => {
+      const newQuoteNumber =
+        String(
+          index + 1
+        ).padStart(
+          4,
+          '0'
+        );
+
+
+      const oldQuoteNumber =
+        String(
+          offer
+            .payload
+            .fields
+            .quoteNumber ||
+          ''
+        ).trim();
+
+
+      /*
+       * لا نعدل العرض إذا كان
+       * رقمه صحيحاً بالفعل.
+       */
+      if (
+        oldQuoteNumber ===
+        newQuoteNumber
+      ) {
+        return;
+      }
+
+
+      offer
+        .payload
+        .fields
+        .quoteNumber =
+          newQuoteNumber;
+
+
+      /*
+       * نحدث عنوان العرض أيضاً
+       * حتى يظهر الرقم الجديد
+       * في قائمة العروض المحفوظة.
+       */
+      offer.title =
+        rebuildOfferTitle(
+          offer
+        );
+
+
+      /*
+       * مهم للمزامنة مع Google Drive.
+       * نحدث updatedAt حتى يعرف النظام
+       * أن النسخة الجديدة هي الأحدث.
+       */
+      offer.updatedAt =
+        new Date(
+          timestamp +
+          index
+        ).toISOString();
+    }
+  );
+
+
+  return result;
+}
+
+function ensureUniqueCurrentQuoteNumber() {
+  const input =
+    $('#quoteNumber');
+
+
+  if (
+    !input
+  ) {
+    return '';
+  }
+
+
+  const currentValue =
+    String(
+      input.value ||
+      ''
+    ).trim();
+
+
+  /*
+   * نحافظ على أرقام العروض القديمة
+   * إذا كانت بصيغة غير رقمية.
+   */
+  if (
+    currentValue &&
+    !/^\d+$/.test(
+      currentValue
+    )
+  ) {
+    return currentValue;
+  }
+
+
+  const preferredNumber =
+    currentValue ||
+    '0001';
+
+
+  const uniqueNumber =
+    getAvailableQuoteNumber(
+      preferredNumber,
+      activeOfferId
+    );
+
+
+  input.value =
+    uniqueNumber;
+
+
+  return uniqueNumber;
+}
     try {
       const offers =
         JSON.parse(
@@ -6948,99 +7298,6 @@ $$('.brand-mark')
 /* =========================================================
    QUOTE NUMBER SEQUENCE
    ========================================================= */
-
-function getHighestQuoteNumber() {
-  let highest =
-    Math.max(
-      0,
-      Number(
-        localStorage.getItem(
-          QUOTE_SEQUENCE_KEY
-        )
-      ) || 0
-    );
-
-
-  const offers =
-    readSavedOffers();
-
-
-  offers.forEach(
-    offer => {
-      const quoteNumber =
-        String(
-          offer
-            ?.payload
-            ?.fields
-            ?.quoteNumber ||
-          ''
-        ).trim();
-
-
-      /*
-       * نحسب فقط الأرقام الجديدة مثل:
-       * 0001
-       * 0002
-       * 0015
-       *
-       * ولا نحسب الأرقام القديمة مثل:
-       * KT-MY-1026
-       */
-      if (
-        !/^\d{4,}$/.test(
-          quoteNumber
-        )
-      ) {
-        return;
-      }
-
-
-      const number =
-        Number(
-          quoteNumber
-        );
-
-
-      if (
-        Number.isFinite(
-          number
-        )
-      ) {
-        highest =
-          Math.max(
-            highest,
-            number
-          );
-      }
-    }
-  );
-
-
-  return highest;
-}
-
-
-function nextQuoteNumber() {
-  const nextNumber =
-    getHighestQuoteNumber() +
-    1;
-
-
-  localStorage.setItem(
-    QUOTE_SEQUENCE_KEY,
-    String(
-      nextNumber
-    )
-  );
-
-
-  return String(
-    nextNumber
-  ).padStart(
-    4,
-    '0'
-  );
-}
 
   function writeSavedOffers(
     offers,
@@ -7138,13 +7395,20 @@ function nextQuoteNumber() {
 
 
   function saveDraft(
-    silent = false
-  ) {
-    ensureStateStructure();
+  silent = false
+) {
+  ensureStateStructure();
 
 
-    const offers =
-      readSavedOffers();
+  /*
+   * الرقم يبقى كما هو إذا كان فريداً.
+   * يتغير فقط إذا وجد عرض آخر بنفس الرقم.
+   */
+  ensureUniqueCurrentQuoteNumber();
+
+
+  const offers =
+    readSavedOffers();
 
 
     let existing =
@@ -7732,8 +7996,18 @@ function nextQuoteNumber() {
 }
 
 
+if (
+  !payload.fields
+) {
+  payload.fields = {};
+}
+
+
 payload.fields.quoteNumber =
-  nextQuoteNumber();
+  getAvailableQuoteNumber(
+    payload.fields.quoteNumber ||
+    '0001'
+  );
 
 
     const newId =
@@ -7769,71 +8043,157 @@ payload.fields.quoteNumber =
 
 
   function deleteOffer(
+  id
+) {
+  const offers =
+    readSavedOffers();
+
+
+  const offer =
+    offers.find(
+      item =>
+        item.id ===
+        id
+    );
+
+
+  if (
+    !offer
+  ) {
+    return;
+  }
+
+
+  const quoteNumber =
+    String(
+      offer
+        ?.payload
+        ?.fields
+        ?.quoteNumber ||
+      ''
+    ).trim();
+
+
+  const confirmed =
+    window.confirm(
+      `هل تريد حذف العرض ${
+        quoteNumber
+          ? `رقم ${quoteNumber}`
+          : `"${offer.title}"`
+      }؟`
+    );
+
+
+  if (
+    !confirmed
+  ) {
+    return;
+  }
+
+
+  /*
+   * أولاً نحذف العرض المطلوب.
+   */
+  const remainingOffers =
+    offers.filter(
+      item =>
+        item.id !==
+        id
+    );
+
+
+  /*
+   * بعدها نعيد ترتيب جميع الأرقام
+   * من 0001 بدون أي فراغات.
+   */
+  const renumberedOffers =
+    renumberOffersSequentially(
+      remainingOffers
+    );
+
+
+  /*
+   * الحفظ محلياً والمزامنة
+   * مع Google Drive.
+   */
+  writeSavedOffers(
+    renumberedOffers
+  );
+
+
+  /*
+   * إذا كان العرض المحذوف
+   * هو العرض المفتوح حالياً.
+   */
+  if (
+    activeOfferId ===
     id
   ) {
-    const offers =
-      readSavedOffers();
+    activeOfferId =
+      null;
 
 
-    const offer =
-      offers.find(
+    currentOfferTouched =
+      false;
+
+
+    localStorage.removeItem(
+      ACTIVE_OFFER_KEY
+    );
+
+
+    startNewOffer(
+      false
+    );
+  } else {
+    /*
+     * إذا كان العرض المفتوح لم يحذف
+     * ولكن رقمه تغير بسبب إعادة الترتيب،
+     * نحدث الرقم الظاهر في الشاشة.
+     */
+    const activeOffer =
+      renumberedOffers.find(
         item =>
           item.id ===
-          id
+          activeOfferId
       );
 
 
     if (
-      !offer
+      activeOffer
     ) {
-      return;
+      const newActiveQuoteNumber =
+        activeOffer
+          ?.payload
+          ?.fields
+          ?.quoteNumber;
+
+
+      if (
+        newActiveQuoteNumber &&
+        $('#quoteNumber')
+      ) {
+        $('#quoteNumber').value =
+          newActiveQuoteNumber;
+      }
+
+
+      updateActiveOfferStatus();
     }
-
-
-    if (
-      !window.confirm(
-        `هل تريد حذف "${offer.title}"؟`
-      )
-    ) {
-      return;
-    }
-
-
-    writeSavedOffers(
-      offers.filter(
-        item =>
-          item.id !==
-          id
-      )
-    );
-
-
-    if (
-      activeOfferId ===
-      id
-    ) {
-      activeOfferId =
-        null;
-
-
-      localStorage.removeItem(
-        ACTIVE_OFFER_KEY
-      );
-
-
-      startNewOffer(
-        false
-      );
-    }
-
-
-    renderSavedOffers();
-
-
-    toast(
-      'تم حذف العرض'
-    );
   }
+
+
+  renderSavedOffers(
+    $('#savedOffersSearch')
+      ?.value ||
+    ''
+  );
+
+
+  toast(
+    'تم حذف العرض وإعادة ترتيب أرقام العروض'
+  );
+}
 
 
   function startNewOffer(
@@ -7891,7 +8251,9 @@ payload.fields.quoteNumber =
 
     const values = {
   quoteNumber:
-    nextQuoteNumber(),
+  getAvailableQuoteNumber(
+    '0001'
+  ),
 
   clientName:
     '',
@@ -9790,7 +10152,9 @@ payload.fields.quoteNumber =
   $('#quoteNumber')
 ) {
   $('#quoteNumber').value =
-    nextQuoteNumber();
+  getAvailableQuoteNumber(
+    '0001'
+  );
 }
 
 
