@@ -9878,403 +9878,430 @@ $$('.brand-mark')
 /* =========================================================
    INLINE IMAGES FOR PDF CAPTURE
    ========================================================= */
-
-async function blobToDataUrl(blob) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onload = () => {
-      resolve(reader.result);
-    };
-
-    reader.onerror = () => {
-      reject(
-        new Error(
-          'تعذر تحويل الصورة إلى Data URL'
-        )
-      );
-    };
-
-    reader.readAsDataURL(blob);
-  });
-}
-
-
-async function imageUrlToDataUrl(url) {
-  if (!url) {
-    return '';
+  async function renderOfferCanvas() {
+  if (
+    document.fonts?.ready
+  ) {
+    await document.fonts.ready;
   }
 
-  if (url.startsWith('data:')) {
-    return url;
-  }
 
-  const absoluteUrl =
-    new URL(
-      url,
-      window.location.href
-    ).href;
+  const source =
+    $('#offerSheet');
 
-  const response =
-    await fetch(
-      absoluteUrl,
-      {
-        cache: 'force-cache'
-      }
-    );
 
-  if (!response.ok) {
+  if (
+    !source
+  ) {
     throw new Error(
-      `تعذر تحميل الصورة: ${absoluteUrl}`
+      'تعذر العثور على عرض العميل'
     );
   }
 
-  const blob =
-    await response.blob();
 
-  return blobToDataUrl(
-    blob
-  );
-}
+  await nextFrame();
 
 
-async function inlineImagesForCapture(
-  source,
-  clone
-) {
-  const sourceImages = [
+  /*
+   * ننتظر تحميل الشعارات الأصلية
+   * قبل بدء تصوير العرض.
+   */
+  const sourceLogos = [
     ...source.querySelectorAll(
-      'img'
+      '.brand-logo-image'
     )
   ];
 
-  const cloneImages = [
-    ...clone.querySelectorAll(
-      'img'
-    )
-  ];
 
   await Promise.all(
-    sourceImages.map(
-      async (
-        sourceImage,
-        index
-      ) => {
-        const cloneImage =
-          cloneImages[index];
-
-        if (!cloneImage) {
-          return;
-        }
-
-        const imageUrl =
-          sourceImage.currentSrc ||
-          sourceImage.src ||
-          sourceImage.getAttribute(
-            'src'
-          );
-
-        if (!imageUrl) {
-          return;
-        }
-
+    sourceLogos.map(
+      async logo => {
         try {
-          const dataUrl =
-            await imageUrlToDataUrl(
-              imageUrl
-            );
-
-          cloneImage.setAttribute(
-            'src',
-            dataUrl
-          );
-        } catch (error) {
-          console.error(
-            '[PDF image capture]',
+          if (
+            !logo.complete ||
+            !logo.naturalWidth
+          ) {
+            await logo.decode();
+          }
+        } catch (
+          error
+        ) {
+          console.warn(
+            '[Logo decode]',
             error
-          );
-
-          cloneImage.setAttribute(
-            'src',
-            imageUrl
           );
         }
       }
     )
   );
-}
-  async function renderOfferCanvas() {
-    if (
-      document.fonts
-        ?.ready
-    ) {
-      await document.fonts.ready;
-    }
 
 
-    const source =
-      $('#offerSheet');
+  const sourceRect =
+    source.getBoundingClientRect();
 
 
-    if (
-      !source
-    ) {
-      throw new Error(
-        'تعذر العثور على عرض العميل'
-      );
-    }
+  const width =
+    Math.ceil(
+      sourceRect.width
+    );
 
 
-    await nextFrame();
+  const height =
+    Math.ceil(
+      source.scrollHeight
+    );
 
 
-    const sourceRect =
-      source.getBoundingClientRect();
+  if (
+    !width ||
+    !height
+  ) {
+    throw new Error(
+      'عرض العميل غير جاهز'
+    );
+  }
 
 
-    const width =
-      Math.ceil(
-        sourceRect.width
-      );
-
-
-    const height =
-      Math.ceil(
-        source.scrollHeight
-      );
-
-
-    if (
-      !width ||
-      !height
-    ) {
-      throw new Error(
-        'عرض العميل غير جاهز'
-      );
-    }
-
-
-    const protectedRects =
-      [];
-
-
-    function protect(
-      element
-    ) {
-      if (
-        !element ||
-        element.hidden
-      ) {
-        return;
-      }
-
-
-      const rect =
-        element.getBoundingClientRect();
-
-
-      if (
-        rect.height <=
-        2
-      ) {
-        return;
-      }
-
-
-      protectedRects.push({
-        top:
-          rect.top -
-          sourceRect.top,
-
-        bottom:
-          rect.bottom -
-          sourceRect.top,
-
-        height:
-          rect.height
-      });
-    }
-
-
-    source
-      .querySelectorAll(
-        [
-          '.client-flight-leg',
-          '.hotel-client-item',
-          '#clientTransfers .included-item',
-          '#clientActivities .included-item',
-          '.client-day',
-          '.price-section',
-          '.terms-section',
-          '.offer-footer'
-        ].join(',')
+  /*
+   * نحفظ مكان كل شعار بالنسبة للعرض.
+   * سنرسمه لاحقاً مباشرة على Canvas.
+   */
+  const capturedLogos =
+    sourceLogos
+      .filter(
+        logo =>
+          logo.complete &&
+          logo.naturalWidth >
+            0 &&
+          logo.naturalHeight >
+            0
       )
-      .forEach(
-        protect
-      );
+      .map(
+        logo => {
+          const rect =
+            logo.getBoundingClientRect();
 
 
-    source
-      .querySelectorAll(
-        '.client-hotel-city'
-      )
-      .forEach(
-        city => {
-          const heading =
-            city.querySelector(
-              ':scope > h3'
+          const style =
+            getComputedStyle(
+              logo
             );
 
 
-          const firstHotel =
-            city.querySelector(
-              '.hotel-client-item'
-            );
+          return {
+            element:
+              logo,
 
+            x:
+              rect.left -
+              sourceRect.left,
 
-          if (
-            !heading ||
-            !firstHotel
-          ) {
-            return;
-          }
+            y:
+              rect.top -
+              sourceRect.top,
 
-
-          const headingRect =
-            heading
-              .getBoundingClientRect();
-
-
-          const hotelRect =
-            firstHotel
-              .getBoundingClientRect();
-
-
-          const top =
-            Math.min(
-              headingRect.top,
-              hotelRect.top
-            ) -
-            sourceRect.top;
-
-
-          const bottom =
-            Math.max(
-              headingRect.bottom,
-              hotelRect.bottom
-            ) -
-            sourceRect.top;
-
-
-          protectedRects.push({
-            top,
-            bottom,
+            width:
+              rect.width,
 
             height:
-              bottom -
-              top
-          });
+              rect.height,
+
+            objectFit:
+              style.objectFit ||
+              'contain'
+          };
         }
       );
 
 
-    const finalStart =
-      source
-        .querySelector(
-          '#clientPriceSection:not([hidden])'
-        )
-        ?.getBoundingClientRect() ||
-      source
-        .querySelector(
-          '#clientNotesSection:not([hidden])'
-        )
-        ?.getBoundingClientRect() ||
-      source
-        .querySelector(
-          '.offer-footer'
-        )
-        ?.getBoundingClientRect();
+  const protectedRects =
+    [];
 
 
-    const footer =
-      source
-        .querySelector(
-          '.offer-footer'
-        )
-        ?.getBoundingClientRect();
+  function protect(
+    element
+  ) {
+    if (
+      !element ||
+      element.hidden
+    ) {
+      return;
+    }
 
 
-    const clone =
-  source.cloneNode(
-    true
-  );
+    const rect =
+      element.getBoundingClientRect();
 
 
-clone.dir =
-  'rtl';
+    if (
+      rect.height <=
+      2
+    ) {
+      return;
+    }
 
 
-/*
- * نحول جميع الصور إلى Data URL
- * حتى تظهر داخل PDF وSVG بشكل صحيح.
- */
-await inlineImagesForCapture(
-  source,
-  clone
-);
+    protectedRects.push({
+      top:
+        rect.top -
+        sourceRect.top,
+
+      bottom:
+        rect.bottom -
+        sourceRect.top,
+
+      height:
+        rect.height
+    });
+  }
 
 
-const originals = [
-      source,
-      ...source.querySelectorAll(
-        '*'
+  source
+    .querySelectorAll(
+      [
+        '.client-flight-leg',
+        '.hotel-client-item',
+        '#clientTransfers .included-item',
+        '#clientActivities .included-item',
+        '.client-day',
+        '.price-section',
+        '.terms-section',
+        '.offer-footer'
+      ].join(',')
+    )
+    .forEach(
+      protect
+    );
+
+
+  source
+    .querySelectorAll(
+      '.client-hotel-city'
+    )
+    .forEach(
+      city => {
+        const heading =
+          city.querySelector(
+            ':scope > h3'
+          );
+
+
+        const firstHotel =
+          city.querySelector(
+            '.hotel-client-item'
+          );
+
+
+        if (
+          !heading ||
+          !firstHotel
+        ) {
+          return;
+        }
+
+
+        const headingRect =
+          heading
+            .getBoundingClientRect();
+
+
+        const hotelRect =
+          firstHotel
+            .getBoundingClientRect();
+
+
+        const top =
+          Math.min(
+            headingRect.top,
+            hotelRect.top
+          ) -
+          sourceRect.top;
+
+
+        const bottom =
+          Math.max(
+            headingRect.bottom,
+            hotelRect.bottom
+          ) -
+          sourceRect.top;
+
+
+        protectedRects.push({
+          top,
+          bottom,
+
+          height:
+            bottom -
+            top
+        });
+      }
+    );
+
+
+  const finalStart =
+    source
+      .querySelector(
+        '#clientPriceSection:not([hidden])'
       )
-    ];
-
-
-    const copies = [
-      clone,
-      ...clone.querySelectorAll(
-        '*'
+      ?.getBoundingClientRect() ||
+    source
+      .querySelector(
+        '#clientNotesSection:not([hidden])'
       )
-    ];
+      ?.getBoundingClientRect() ||
+    source
+      .querySelector(
+        '.offer-footer'
+      )
+      ?.getBoundingClientRect();
 
 
-    const pseudoRules =
-      [];
+  const footer =
+    source
+      .querySelector(
+        '.offer-footer'
+      )
+      ?.getBoundingClientRect();
+
+
+  /*
+   * ننسخ عرض العميل.
+   */
+  const clone =
+    source.cloneNode(
+      true
+    );
+
+
+  clone.dir =
+    'rtl';
+
+
+  const originals = [
+    source,
+    ...source.querySelectorAll(
+      '*'
+    )
+  ];
+
+
+  const copies = [
+    clone,
+    ...clone.querySelectorAll(
+      '*'
+    )
+  ];
+
+
+  const pseudoRules =
+    [];
+
+
+  for (
+    let index =
+      0;
+
+    index <
+    originals.length;
+
+    index +=
+      1
+  ) {
+    const original =
+      originals[
+        index
+      ];
+
+
+    const copy =
+      copies[
+        index
+      ];
+
+
+    const computed =
+      getComputedStyle(
+        original
+      );
+
+
+    copy.removeAttribute(
+      'style'
+    );
 
 
     for (
-      let index =
+      let styleIndex =
         0;
 
-      index <
-      originals.length;
+      styleIndex <
+      computed.length;
 
-      index +=
+      styleIndex +=
         1
     ) {
-      const original =
-        originals[
-          index
-        ];
-
-
-      const copy =
-        copies[
-          index
-        ];
-
-
-      const computed =
-        getComputedStyle(
-          original
+      const property =
+        computed.item(
+          styleIndex
         );
 
 
-      copy.removeAttribute(
-        'style'
+      copy.style.setProperty(
+        property,
+
+        computed.getPropertyValue(
+          property
+        )
       );
+    }
+
+
+    copy.style.setProperty(
+      'animation',
+      'none'
+    );
+
+
+    copy.style.setProperty(
+      'transition',
+      'none'
+    );
+
+
+    copy.setAttribute(
+      'data-capture-id',
+      String(
+        index
+      )
+    );
+
+
+    for (
+      const pseudo of [
+        '::before',
+        '::after'
+      ]
+    ) {
+      const style =
+        getComputedStyle(
+          original,
+          pseudo
+        );
+
+
+      if (
+        !style.content ||
+        style.content ===
+          'none' ||
+        style.content ===
+          'normal'
+      ) {
+        continue;
+      }
+
+
+      const rules =
+        [];
 
 
       for (
@@ -10282,331 +10309,474 @@ const originals = [
           0;
 
         styleIndex <
-        computed.length;
+        style.length;
 
         styleIndex +=
           1
       ) {
         const property =
-          computed.item(
+          style.item(
             styleIndex
           );
 
 
-        copy.style.setProperty(
-          property,
-
-          computed.getPropertyValue(
-            property
-          )
+        rules.push(
+          `${property}:${style.getPropertyValue(property)}`
         );
       }
 
 
-      copy.style.setProperty(
-        'animation',
-        'none'
+      pseudoRules.push(
+        `[data-capture-id="${index}"]${pseudo}{${rules.join(';')}}`
       );
-
-
-      copy.style.setProperty(
-        'transition',
-        'none'
-      );
-
-
-      copy.setAttribute(
-        'data-capture-id',
-        String(
-          index
-        )
-      );
-
-
-      for (
-        const pseudo of [
-          '::before',
-          '::after'
-        ]
-      ) {
-        const style =
-          getComputedStyle(
-            original,
-            pseudo
-          );
-
-
-        if (
-          !style.content ||
-          style.content ===
-            'none' ||
-          style.content ===
-            'normal'
-        ) {
-          continue;
-        }
-
-
-        const rules =
-          [];
-
-
-        for (
-          let styleIndex =
-            0;
-
-          styleIndex <
-          style.length;
-
-          styleIndex +=
-            1
-        ) {
-          const property =
-            style.item(
-              styleIndex
-            );
-
-
-          rules.push(
-            `${property}:${style.getPropertyValue(property)}`
-          );
-        }
-
-
-        pseudoRules.push(
-          `[data-capture-id="${index}"]${pseudo}{${rules.join(';')}}`
-        );
-      }
     }
+  }
 
 
-    clone.style.width =
-      `${width}px`;
-
-
-    clone.style.maxWidth =
-      'none';
-
-
-    clone.style.margin =
-      '0';
-
-
-    clone.style.boxShadow =
-      'none';
-
-
-    const markup =
-      new XMLSerializer()
-        .serializeToString(
-          clone
+  /*
+   * مهم جداً:
+   *
+   * نحذف صور الشعار من نسخة SVG حتى لا يظهر
+   * رمز الصورة المكسورة.
+   *
+   * سنرسم الصورة الأصلية لاحقاً على Canvas.
+   */
+  clone
+    .querySelectorAll(
+      '.brand-logo-image'
+    )
+    .forEach(
+      image => {
+        image.removeAttribute(
+          'src'
         );
 
 
-    const svg = `
-      <svg
-        xmlns="http://www.w3.org/2000/svg"
+        image.removeAttribute(
+          'srcset'
+        );
+
+
+        image.style.setProperty(
+          'visibility',
+          'hidden',
+          'important'
+        );
+
+
+        image.style.setProperty(
+          'opacity',
+          '0',
+          'important'
+        );
+      }
+    );
+
+
+  clone.style.width =
+    `${width}px`;
+
+
+  clone.style.maxWidth =
+    'none';
+
+
+  clone.style.margin =
+    '0';
+
+
+  clone.style.boxShadow =
+    'none';
+
+
+  const markup =
+    new XMLSerializer()
+      .serializeToString(
+        clone
+      );
+
+
+  const svg = `
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="${width}"
+      height="${height}"
+      viewBox="0 0 ${width} ${height}"
+    >
+
+      <foreignObject
+        x="0"
+        y="0"
         width="${width}"
         height="${height}"
-        viewBox="0 0 ${width} ${height}"
       >
 
-        <foreignObject
-          width="100%"
-          height="100%"
+        <div
+          xmlns="http://www.w3.org/1999/xhtml"
+          dir="rtl"
+          style="
+            width:${width}px;
+            height:${height}px;
+            margin:0;
+            padding:0;
+            background:#fff;
+          "
         >
 
-          <div
-            xmlns="http://www.w3.org/1999/xhtml"
-            dir="rtl"
-            style="
-              width:${width}px;
-              height:${height}px;
-              background:#fff;
-            "
-          >
+          <style>
+            ${pseudoRules.join('\n')}
+          </style>
 
-            <style>
-              ${pseudoRules.join('\n')}
-            </style>
+          ${markup}
 
-            ${markup}
+        </div>
 
-          </div>
+      </foreignObject>
 
-        </foreignObject>
-
-      </svg>
-    `;
+    </svg>
+  `;
 
 
-    const image =
-      new Image();
-
-
-    image.src =
-      `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-
-
-    await image.decode();
-
-
-    const maxPixels =
-      64000000;
-
-
-    const scale =
-      Math.max(
-        .5,
-
-        Math.min(
-          2,
-
-          Math.sqrt(
-            maxPixels /
-            (
-              width *
-              height
-            )
-          ),
-
-          30000 /
-          width,
-
-          30000 /
-          height
-        )
-      );
-
-
-    const canvas =
-      document.createElement(
-        'canvas'
-      );
-
-
-    canvas.width =
-      Math.max(
-        1,
-
-        Math.round(
-          width *
-          scale
-        )
-      );
-
-
-    canvas.height =
-      Math.max(
-        1,
-
-        Math.round(
-          height *
-          scale
-        )
-      );
-
-
-    const context =
-      canvas.getContext(
-        '2d',
-        {
-          alpha:
-            false
-        }
-      );
-
-
-    if (
-      !context
-    ) {
-      throw new Error(
-        'تعذر إنشاء صورة العرض'
-      );
-    }
-
-
-    context.fillStyle =
-      '#fff';
-
-
-    context.fillRect(
-      0,
-      0,
-      canvas.width,
-      canvas.height
+  const svgBlob =
+    new Blob(
+      [
+        svg
+      ],
+      {
+        type:
+          'image/svg+xml;charset=utf-8'
+      }
     );
 
 
-    context.drawImage(
-      image,
-      0,
-      0,
-      canvas.width,
-      canvas.height
+  const svgUrl =
+    URL.createObjectURL(
+      svgBlob
     );
 
 
-    canvas.offerLayout = {
-      scale,
+  const image =
+    new Image();
 
-      protectedRanges:
-        protectedRects.map(
-          rect => ({
-            top:
-              Math.round(
-                rect.top *
-                scale
-              ),
 
-            bottom:
-              Math.round(
-                rect.bottom *
-                scale
-              ),
+  try {
+    await new Promise(
+      (
+        resolve,
+        reject
+      ) => {
+        image.onload =
+          resolve;
 
-            height:
-              Math.round(
-                rect.height *
-                scale
+
+        image.onerror =
+          () => {
+            reject(
+              new Error(
+                'تعذر تحويل العرض إلى صورة'
               )
-          })
+            );
+          };
+
+
+        image.src =
+          svgUrl;
+      }
+    );
+  } finally {
+    URL.revokeObjectURL(
+      svgUrl
+    );
+  }
+
+
+  const maxPixels =
+    64000000;
+
+
+  const scale =
+    Math.max(
+      .5,
+
+      Math.min(
+        2,
+
+        Math.sqrt(
+          maxPixels /
+          (
+            width *
+            height
+          )
         ),
 
-      finalBlockTop:
-        finalStart
-          ? Math.max(
-              0,
+        30000 /
+        width,
 
-              Math.round(
-                (
-                  finalStart.top -
-                  sourceRect.top
-                ) *
-                scale
-              )
-            )
-          : null,
-
-      finalBlockBottom:
-        footer
-          ? Math.min(
-              canvas.height,
-
-              Math.round(
-                (
-                  footer.bottom -
-                  sourceRect.top
-                ) *
-                scale
-              )
-            )
-          : null
-    };
+        30000 /
+        height
+      )
+    );
 
 
-    return canvas;
+  const canvas =
+    document.createElement(
+      'canvas'
+    );
+
+
+  canvas.width =
+    Math.max(
+      1,
+
+      Math.round(
+        width *
+        scale
+      )
+    );
+
+
+  canvas.height =
+    Math.max(
+      1,
+
+      Math.round(
+        height *
+        scale
+      )
+    );
+
+
+  const context =
+    canvas.getContext(
+      '2d',
+      {
+        alpha:
+          false
+      }
+    );
+
+
+  if (
+    !context
+  ) {
+    throw new Error(
+      'تعذر إنشاء صورة العرض'
+    );
   }
+
+
+  context.fillStyle =
+    '#fff';
+
+
+  context.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  /*
+   * أولاً نرسم نسخة العرض بدون الشعار.
+   */
+  context.drawImage(
+    image,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+
+  /*
+   * الآن نرسم الشعارات الأصلية مباشرة
+   * فوق Canvas.
+   *
+   * هذه الخطوة لا تستخدم SVG أو foreignObject.
+   */
+  capturedLogos.forEach(
+    logo => {
+      const sourceImage =
+        logo.element;
+
+
+      if (
+        !sourceImage.naturalWidth ||
+        !sourceImage.naturalHeight
+      ) {
+        return;
+      }
+
+
+      const boxX =
+        logo.x *
+        scale;
+
+
+      const boxY =
+        logo.y *
+        scale;
+
+
+      const boxWidth =
+        logo.width *
+        scale;
+
+
+      const boxHeight =
+        logo.height *
+        scale;
+
+
+      const imageRatio =
+        sourceImage.naturalWidth /
+        sourceImage.naturalHeight;
+
+
+      const boxRatio =
+        boxWidth /
+        boxHeight;
+
+
+      let drawWidth =
+        boxWidth;
+
+
+      let drawHeight =
+        boxHeight;
+
+
+      let drawX =
+        boxX;
+
+
+      let drawY =
+        boxY;
+
+
+      /*
+       * نحافظ على أبعاد الشعار
+       * مثل object-fit: contain.
+       */
+      if (
+        logo.objectFit ===
+          'contain' ||
+        logo.objectFit ===
+          'scale-down'
+      ) {
+        if (
+          imageRatio >
+          boxRatio
+        ) {
+          drawWidth =
+            boxWidth;
+
+
+          drawHeight =
+            boxWidth /
+            imageRatio;
+
+
+          drawY =
+            boxY +
+            (
+              boxHeight -
+              drawHeight
+            ) /
+            2;
+        } else {
+          drawHeight =
+            boxHeight;
+
+
+          drawWidth =
+            boxHeight *
+            imageRatio;
+
+
+          drawX =
+            boxX +
+            (
+              boxWidth -
+              drawWidth
+            ) /
+            2;
+        }
+      }
+
+
+      context.drawImage(
+        sourceImage,
+        drawX,
+        drawY,
+        drawWidth,
+        drawHeight
+      );
+    }
+  );
+
+
+  canvas.offerLayout = {
+    scale,
+
+    protectedRanges:
+      protectedRects.map(
+        rect => ({
+          top:
+            Math.round(
+              rect.top *
+              scale
+            ),
+
+          bottom:
+            Math.round(
+              rect.bottom *
+              scale
+            ),
+
+          height:
+            Math.round(
+              rect.height *
+              scale
+            )
+        })
+      ),
+
+    finalBlockTop:
+      finalStart
+        ? Math.max(
+            0,
+
+            Math.round(
+              (
+                finalStart.top -
+                sourceRect.top
+              ) *
+              scale
+            )
+          )
+        : null,
+
+    finalBlockBottom:
+      footer
+        ? Math.min(
+            canvas.height,
+
+            Math.round(
+              (
+                footer.bottom -
+                sourceRect.top
+              ) *
+              scale
+            )
+          )
+        : null
+  };
+
+
+  return canvas;
+}
 
 
   /* =========================================================
