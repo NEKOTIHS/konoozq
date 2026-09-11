@@ -3658,3 +3658,294 @@ dialog::backdrop {
 
   object-position: center;
 }
+/* =========================================================
+   AI OFFER IMPORT
+   ========================================================= */
+
+.import-offer-dialog {
+  width: min(620px, calc(100vw - 28px));
+  max-height: calc(100vh - 30px);
+  padding: 0;
+  border: 0;
+  border-radius: 22px;
+  overflow: auto;
+  background: transparent;
+}
+
+.import-offer-dialog::backdrop {
+  background: rgba(9, 32, 28, 0.62);
+  backdrop-filter: blur(5px);
+}
+
+.import-offer-card {
+  padding: 22px;
+  display: grid;
+  gap: 18px;
+  color: var(--text);
+  background: #ffffff;
+  border-radius: 22px;
+}
+
+.import-offer-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.import-offer-head > div {
+  display: grid;
+  gap: 5px;
+}
+
+.import-offer-head strong {
+  color: var(--green);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.import-offer-head span {
+  color: #71807c;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.import-close-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 1px solid #e3ebe8;
+  border-radius: 10px;
+  color: #52645f;
+  background: #f7faf9;
+  cursor: pointer;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.import-close-btn:hover {
+  color: #ffffff;
+  background: var(--green);
+  border-color: var(--green);
+}
+
+.import-field {
+  display: grid;
+  gap: 8px;
+}
+
+.import-field > span,
+.import-upload > span {
+  color: #39544d;
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.import-field textarea,
+.import-field select {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid #dce7e4;
+  border-radius: 12px;
+  outline: none;
+  color: var(--text);
+  background: #ffffff;
+  font: inherit;
+}
+
+.import-field textarea {
+  min-height: 130px;
+  padding: 13px;
+  resize: vertical;
+  direction: rtl;
+  text-align: right;
+  line-height: 1.8;
+}
+
+.import-field select {
+  min-height: 44px;
+  padding: 0 12px;
+  direction: rtl;
+}
+
+.import-field textarea:focus,
+.import-field select:focus {
+  border-color: var(--green);
+  box-shadow: 0 0 0 3px rgba(13, 100, 80, 0.08);
+}
+
+.import-separator {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.import-separator::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: #e7eeec;
+}
+
+.import-separator span {
+  position: relative;
+  z-index: 1;
+  padding: 0 12px;
+  color: #8a9894;
+  background: #ffffff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.import-upload {
+  min-height: 95px;
+  padding: 15px;
+  display: grid;
+  place-items: center;
+  gap: 7px;
+  box-sizing: border-box;
+  border: 2px dashed #cfe1dc;
+  border-radius: 14px;
+  text-align: center;
+  background: #f8fbfa;
+  cursor: pointer;
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.import-upload:hover {
+  border-color: var(--green);
+  background: #f2f9f6;
+}
+
+.import-upload input {
+  max-width: 100%;
+  font: inherit;
+}
+
+.import-upload small {
+  color: #84938f;
+  font-size: 9px;
+}
+
+.import-image-preview {
+  padding: 10px;
+  border: 1px solid #e0e9e6;
+  border-radius: 14px;
+  background: #f7faf9;
+}
+
+.import-image-preview img {
+  display: block;
+  width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  object-position: center;
+  border-radius: 9px;
+  background: #ffffff;
+}
+
+.import-offer-status {
+  margin: 0;
+  padding: 11px 13px;
+  border-radius: 10px;
+  color: #315d52;
+  background: #edf8f4;
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1.7;
+}
+
+.import-offer-status.is-error {
+  color: #9d3737;
+  background: #fff1f1;
+}
+
+.import-offer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+
+.import-offer-actions button {
+  min-height: 42px;
+}
+
+#importOfferBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+#analyzeImportOfferBtn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+@media (max-width: 600px) {
+  .import-offer-dialog {
+    width: calc(100vw - 18px);
+    max-height: calc(100vh - 18px);
+  }
+
+  .import-offer-card {
+    padding: 17px;
+    gap: 15px;
+  }
+
+  .import-offer-head strong {
+    font-size: 16px;
+  }
+
+  .import-offer-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .import-offer-actions button {
+    width: 100%;
+  }
+}
+/* أي أكواد CSS موجودة عندك فوق */
+
+
+/* =========================================================
+   OFFER ACTIONS LAYOUT
+   ========================================================= */
+
+.offer-main-actions {
+  width: 100%;
+  margin-top: 8px;
+
+  display: grid;
+  gap: 8px;
+}
+
+.offer-main-actions > .btn {
+  width: 100%;
+  margin: 0;
+}
+
+.offer-action-row {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.offer-action-row > .btn {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+}
