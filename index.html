@@ -1253,35 +1253,45 @@
           </button>
 
 
-          <div class="offer-storage-actions">
+          <div class="offer-main-actions">
 
-            <button
-              class="btn btn-secondary"
-              id="saveDraftBtn"
-              type="button"
-            >
-              حفظ العرض
-            </button>
+  <button
+    id="saveDraftBtn"
+    class="btn btn-secondary"
+    type="button"
+  >
+    حفظ العرض
+  </button>
 
+  <button
+    id="importOfferBtn"
+    class="btn btn-secondary"
+    type="button"
+  >
+    استيراد العرض
+  </button>
 
-            <button
-              class="btn btn-ghost"
-              id="savedOffersBtn"
-              type="button"
-            >
-              العروض المحفوظة
-            </button>
+  <div class="offer-action-row">
 
+    <button
+      id="savedOffersBtn"
+      class="btn btn-secondary"
+      type="button"
+    >
+      العروض المحفوظة
+    </button>
 
-            <button
-              class="btn btn-ghost"
-              id="newOfferBtn"
-              type="button"
-            >
-              + عرض جديد
-            </button>
+    <button
+      id="newOfferBtn"
+      class="btn btn-secondary"
+      type="button"
+    >
+      + عرض جديد
+    </button>
 
-          </div>
+  </div>
+
+</div>
 
 
           <small
@@ -2440,6 +2450,114 @@
     aria-live="polite"
   ></div>
 
+
+  <dialog
+  id="importOfferDialog"
+  class="import-offer-dialog"
+>
+  <form
+    id="importOfferForm"
+    class="import-offer-card"
+  >
+    <div class="import-offer-head">
+      <div>
+        <strong>
+          استيراد العرض بالذكاء الاصطناعي
+        </strong>
+
+        <span>
+          ارفع صورة أو اكتب تفاصيل العرض
+        </span>
+      </div>
+
+      <button
+        id="closeImportOfferBtn"
+        class="btn btn-secondary"
+        type="button"
+        aria-label="إغلاق"
+      >
+        ×
+      </button>
+    </div>
+
+    <label class="import-field">
+      <span>تفاصيل العرض</span>
+
+      <textarea
+        id="importOfferPrompt"
+        rows="6"
+        placeholder="مثال: العميل محمد، شخصين، من جدة إلى ماليزيا، السفر 6 أكتوبر والعودة 20 أكتوبر..."
+      ></textarea>
+    </label>
+
+    <div class="import-separator">
+      <span>أو</span>
+    </div>
+
+    <label class="import-upload">
+      <span>رفع صورة العرض</span>
+
+      <input
+        id="importOfferImage"
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+      >
+
+      <small>
+        PNG أو JPG أو WEBP
+      </small>
+    </label>
+
+    <div
+      id="importImagePreviewWrap"
+      class="import-image-preview"
+      hidden
+    >
+      <img
+        id="importImagePreview"
+        alt="معاينة الصورة"
+      >
+    </div>
+
+    <label class="import-field">
+      <span>طريقة الاستيراد</span>
+
+      <select id="importOfferMode">
+        <option value="new">
+          إنشاء عرض جديد من البيانات
+        </option>
+
+        <option value="current">
+          إضافة البيانات إلى العرض الحالي
+        </option>
+      </select>
+    </label>
+
+    <p
+      id="importOfferStatus"
+      class="import-offer-status"
+      hidden
+    ></p>
+
+    <div class="import-offer-actions">
+      <button
+        id="analyzeImportOfferBtn"
+        class="btn btn-ghost"
+        type="submit"
+      >
+        ✨ تحليل واستيراد
+      </button>
+
+      <button
+        id="cancelImportOfferBtn"
+        class="btn btn-ghost"
+        type="button"
+      >
+        إلغاء
+      </button>
+    </div>
+  </form>
+</dialog>
 
   <script
   src="https://accounts.google.com/gsi/client"
