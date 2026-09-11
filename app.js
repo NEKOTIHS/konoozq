@@ -6,6 +6,9 @@
      CONSTANTS
      ========================================================= */
 
+     const AI_IMPORT_ENDPOINT =
+  'https://konoozagent.khaledsan201031.workers.dev/import-offer';
+  
   const categories = {
     flight: {
       label: 'الطيران',
@@ -10794,8 +10797,6 @@ async function loadCanvasSafeImage(
         allowTaint:
           false,
 
-        foreignObjectRendering:
-          false,
 
         logging:
           false,
@@ -12900,7 +12901,1065 @@ async function loadCanvasSafeImage(
       }
     }
   );
+/* =========================================================
+   AI OFFER IMPORT
+   ========================================================= */
 
+let importImagePreviewUrl =
+  null;
+
+
+function setImportStatus(
+  message = '',
+  isError = false
+) {
+  const element =
+    $('#importOfferStatus');
+
+
+  if (
+    !element
+  ) {
+    return;
+  }
+
+
+  element.hidden =
+    !message;
+
+
+  element.textContent =
+    message;
+
+
+  element.classList.toggle(
+    'is-error',
+    isError
+  );
+}
+
+
+function clearImportImagePreview() {
+  if (
+    importImagePreviewUrl
+  ) {
+    URL.revokeObjectURL(
+      importImagePreviewUrl
+    );
+
+
+    importImagePreviewUrl =
+      null;
+  }
+
+
+  const preview =
+    $('#importImagePreview');
+
+
+  const wrap =
+    $('#importImagePreviewWrap');
+
+
+  if (
+    preview
+  ) {
+    preview.removeAttribute(
+      'src'
+    );
+  }
+
+
+  if (
+    wrap
+  ) {
+    wrap.hidden =
+      true;
+  }
+}
+
+
+function resetImportOfferDialog() {
+  const prompt =
+    $('#importOfferPrompt');
+
+
+  const image =
+    $('#importOfferImage');
+
+
+  const mode =
+    $('#importOfferMode');
+
+
+  if (
+    prompt
+  ) {
+    prompt.value =
+      '';
+  }
+
+
+  if (
+    image
+  ) {
+    image.value =
+      '';
+  }
+
+
+  if (
+    mode
+  ) {
+    mode.value =
+      'new';
+  }
+
+
+  clearImportImagePreview();
+
+
+  setImportStatus();
+}
+
+
+function fileToImageElement(
+  file
+) {
+  return new Promise(
+    (
+      resolve,
+      reject
+    ) => {
+      const url =
+        URL.createObjectURL(
+          file
+        );
+
+
+      const image =
+        new Image();
+
+
+      image.onload =
+        () => {
+          URL.revokeObjectURL(
+            url
+          );
+
+
+          resolve(
+            image
+          );
+        };
+
+
+      image.onerror =
+        () => {
+          URL.revokeObjectURL(
+            url
+          );
+
+
+          reject(
+            new Error(
+              'تعذر قراءة الصورة'
+            )
+          );
+        };
+
+
+      image.src =
+        url;
+    }
+  );
+}
+
+
+async function importImageFileToDataUrl(
+  file
+) {
+  if (
+    !file
+  ) {
+    return null;
+  }
+
+
+  const allowedTypes =
+    new Set([
+      'image/jpeg',
+      'image/png',
+      'image/webp'
+    ]);
+
+
+  if (
+    !allowedTypes.has(
+      file.type
+    )
+  ) {
+    throw new Error(
+      'صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WEBP'
+    );
+  }
+
+
+  if (
+    file.size >
+    12 * 1024 * 1024
+  ) {
+    throw new Error(
+      'حجم الصورة أكبر من 12MB'
+    );
+  }
+
+
+  const image =
+    await fileToImageElement(
+      file
+    );
+
+
+  const maxDimension =
+    1800;
+
+
+  const ratio =
+    Math.min(
+      1,
+
+      maxDimension /
+      Math.max(
+        image.naturalWidth,
+        image.naturalHeight
+      )
+    );
+
+
+  const width =
+    Math.max(
+      1,
+
+      Math.round(
+        image.naturalWidth *
+        ratio
+      )
+    );
+
+
+  const height =
+    Math.max(
+      1,
+
+      Math.round(
+        image.naturalHeight *
+        ratio
+      )
+    );
+
+
+  const canvas =
+    document.createElement(
+      'canvas'
+    );
+
+
+  canvas.width =
+    width;
+
+
+  canvas.height =
+    height;
+
+
+  const context =
+    canvas.getContext(
+      '2d'
+    );
+
+
+  if (
+    !context
+  ) {
+    throw new Error(
+      'تعذر تجهيز الصورة'
+    );
+  }
+
+
+  context.fillStyle =
+    '#ffffff';
+
+
+  context.fillRect(
+    0,
+    0,
+    width,
+    height
+  );
+
+
+  context.drawImage(
+    image,
+    0,
+    0,
+    width,
+    height
+  );
+
+
+  return canvas.toDataURL(
+    'image/jpeg',
+    0.88
+  );
+}
+
+
+function setImportedField(
+  id,
+  value
+) {
+  if (
+    value === null ||
+    value === undefined ||
+    value === ''
+  ) {
+    return;
+  }
+
+
+  const element =
+    $(`#${id}`);
+
+
+  if (
+    !element
+  ) {
+    return;
+  }
+
+
+  if (
+    element.type ===
+    'checkbox'
+  ) {
+    element.checked =
+      Boolean(
+        value
+      );
+
+
+    return;
+  }
+
+
+  element.value =
+    String(
+      value
+    );
+}
+
+
+function importedServiceToState(
+  service
+) {
+  const allowedCategories =
+    new Set([
+      'flight',
+      'hotel',
+      'transfer',
+      'activity'
+    ]);
+
+
+  const category =
+    allowedCategories.has(
+      service?.category
+    )
+      ? service.category
+      : 'transfer';
+
+
+  const item = {
+    id:
+      `service-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+
+    category,
+
+    name:
+      String(
+        service?.name ||
+        categoryLabel(
+          category
+        )
+      ).trim(),
+
+    details:
+      String(
+        service?.details ||
+        ''
+      ).trim(),
+
+    costMode:
+      service?.costMode ===
+      'unit'
+        ? 'unit'
+        : 'total',
+
+    qty:
+      Math.max(
+        1,
+        toNumber(
+          service?.qty,
+          1
+        )
+      ),
+
+    cost:
+      Math.max(
+        0,
+        toNumber(
+          service?.cost
+        )
+      )
+  };
+
+
+  if (
+    category ===
+    'hotel'
+  ) {
+    item.city =
+      String(
+        service?.city ||
+        'غير محددة'
+      ).trim();
+
+
+    item.checkIn =
+      String(
+        service?.checkIn ||
+        ''
+      ).trim();
+
+
+    item.checkInTime =
+      String(
+        service?.checkInTime ||
+        ''
+      ).trim();
+
+
+    item.checkOut =
+      String(
+        service?.checkOut ||
+        ''
+      ).trim();
+
+
+    item.checkOutTime =
+      String(
+        service?.checkOutTime ||
+        ''
+      ).trim();
+
+
+    item.hotelTax =
+      Math.max(
+        0,
+        toNumber(
+          service?.hotelTax
+        )
+      );
+  }
+
+
+  if (
+    category ===
+    'flight'
+  ) {
+    const segments =
+      Array.isArray(
+        service?.segments
+      )
+        ? service.segments
+        : [];
+
+
+    item.segments =
+      segments.map(
+        segment =>
+          createSegment(
+            String(
+              segment?.from ||
+              ''
+            ).trim(),
+
+            String(
+              segment?.to ||
+              ''
+            ).trim(),
+
+            String(
+              segment?.departureDate ||
+              ''
+            ).trim(),
+
+            String(
+              segment?.departureTime ||
+              ''
+            ).trim(),
+
+            String(
+              segment?.arrivalDate ||
+              ''
+            ).trim(),
+
+            String(
+              segment?.arrivalTime ||
+              ''
+            ).trim(),
+
+            Math.max(
+              0,
+              toNumber(
+                segment?.price
+              )
+            ),
+
+            String(
+              segment?.extraDetails ||
+              ''
+            ).trim()
+          )
+      );
+
+
+    if (
+      !item.segments.length
+    ) {
+      item.segments.push(
+        createSegment()
+      );
+    }
+  }
+
+
+  return item;
+}
+
+
+function applyImportedOffer(
+  imported,
+  mode = 'new'
+) {
+  if (
+    !imported ||
+    typeof imported !==
+    'object'
+  ) {
+    throw new Error(
+      'بيانات العرض المستخرجة غير صالحة'
+    );
+  }
+
+
+  /*
+   * إذا اخترنا إنشاء عرض جديد،
+   * نحفظ الحالي أولاً ثم نفتح عرض جديد.
+   */
+  if (
+    mode ===
+    'new'
+  ) {
+    startNewOffer(
+      true
+    );
+  }
+
+
+  /*
+   * رقم العرض لا يأتي من الذكاء الاصطناعي.
+   * نظام البرنامج الحالي هو المسؤول عنه.
+   */
+  setImportedField(
+    'clientName',
+    imported.clientName
+  );
+
+
+  setImportedField(
+    'origin',
+    imported.origin
+  );
+
+
+  setImportedField(
+    'destination',
+    imported.destination
+  );
+
+
+  setImportedField(
+    'startDate',
+    imported.startDate
+  );
+
+
+  setImportedField(
+    'endDate',
+    imported.endDate
+  );
+
+
+  if (
+    imported.adults !== null &&
+    imported.adults !== undefined
+  ) {
+    setImportedField(
+      'adults',
+      imported.adults
+    );
+  }
+
+
+  if (
+    imported.children !== null &&
+    imported.children !== undefined
+  ) {
+    setImportedField(
+      'children',
+      imported.children
+    );
+  }
+
+
+  if (
+    imported.internalNotes
+  ) {
+    const notes =
+      $('#internalNotes');
+
+
+    if (
+      notes
+    ) {
+      if (
+        mode === 'current' &&
+        notes.value.trim()
+      ) {
+        notes.value =
+          `${notes.value.trim()}\n${imported.internalNotes}`;
+      } else {
+        notes.value =
+          imported.internalNotes;
+      }
+    }
+  }
+
+
+  /*
+   * الخدمات.
+   */
+  const importedServices =
+    Array.isArray(
+      imported.services
+    )
+      ? imported.services
+          .filter(
+            Boolean
+          )
+          .map(
+            importedServiceToState
+          )
+      : [];
+
+
+  if (
+    importedServices.length
+  ) {
+    if (
+      mode ===
+      'new'
+    ) {
+      state.services =
+        importedServices;
+    } else {
+      state.services.push(
+        ...importedServices
+      );
+    }
+  }
+
+
+  /*
+   * برنامج الرحلة.
+   */
+  const importedItinerary =
+    Array.isArray(
+      imported.itinerary
+    )
+      ? imported.itinerary
+          .filter(
+            day =>
+              day &&
+              (
+                day.title ||
+                day.details
+              )
+          )
+          .map(
+            day => ({
+              title:
+                String(
+                  day.title ||
+                  'يوم جديد'
+                ).trim(),
+
+              details:
+                String(
+                  day.details ||
+                  ''
+                ).trim()
+            })
+          )
+      : [];
+
+
+  if (
+    importedItinerary.length
+  ) {
+    if (
+      mode ===
+      'new'
+    ) {
+      state.itinerary =
+        importedItinerary;
+    } else {
+      state.itinerary.push(
+        ...importedItinerary
+      );
+    }
+  }
+
+
+  /*
+   * إنشاء قائمة مدن الفنادق تلقائياً.
+   */
+  const hotelCities =
+    state.services
+      .filter(
+        item =>
+          item.category ===
+          'hotel'
+      )
+      .map(
+        item =>
+          String(
+            item.city ||
+            ''
+          ).trim()
+      )
+      .filter(
+        Boolean
+      );
+
+
+  state.hotelCities =
+    [
+      ...new Set([
+        ...state.hotelCities,
+        ...hotelCities
+      ])
+    ];
+
+
+  renderAll();
+
+
+  renderChildAges();
+
+
+  currentOfferTouched =
+    true;
+
+
+  scheduleAutoSave();
+
+
+  updateActiveOfferStatus();
+}
+
+
+$('#importOfferBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      resetImportOfferDialog();
+
+
+      $('#importOfferDialog')
+        ?.showModal();
+    }
+  );
+
+
+$('#closeImportOfferBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      $('#importOfferDialog')
+        ?.close();
+
+
+      clearImportImagePreview();
+    }
+  );
+
+
+$('#cancelImportOfferBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      $('#importOfferDialog')
+        ?.close();
+
+
+      clearImportImagePreview();
+    }
+  );
+
+
+$('#importOfferImage')
+  ?.addEventListener(
+    'change',
+    event => {
+      clearImportImagePreview();
+
+
+      const file =
+        event.target.files?.[0];
+
+
+      if (
+        !file
+      ) {
+        return;
+      }
+
+
+      importImagePreviewUrl =
+        URL.createObjectURL(
+          file
+        );
+
+
+      const preview =
+        $('#importImagePreview');
+
+
+      const wrap =
+        $('#importImagePreviewWrap');
+
+
+      if (
+        preview
+      ) {
+        preview.src =
+          importImagePreviewUrl;
+      }
+
+
+      if (
+        wrap
+      ) {
+        wrap.hidden =
+          false;
+      }
+
+
+      setImportStatus(
+        'الصورة جاهزة للتحليل'
+      );
+    }
+  );
+
+
+$('#importOfferForm')
+  ?.addEventListener(
+    'submit',
+    async event => {
+      event.preventDefault();
+
+
+      const prompt =
+        $('#importOfferPrompt')
+          ?.value
+          .trim() ||
+        '';
+
+
+      const file =
+        $('#importOfferImage')
+          ?.files?.[0] ||
+        null;
+
+
+      const mode =
+        $('#importOfferMode')
+          ?.value ||
+        'new';
+
+
+      if (
+        !prompt &&
+        !file
+      ) {
+        setImportStatus(
+          'اكتب تفاصيل العرض أو ارفع صورة أولاً.',
+          true
+        );
+
+
+        return;
+      }
+
+
+      const button =
+        $('#analyzeImportOfferBtn');
+
+
+      const originalText =
+        button?.textContent ||
+        'تحليل واستيراد';
+
+
+      if (
+        button
+      ) {
+        button.disabled =
+          true;
+
+
+        button.textContent =
+          'جاري التحليل...';
+      }
+
+
+      setImportStatus(
+        file
+          ? 'جاري قراءة الصورة واستخراج بيانات العرض...'
+          : 'جاري تحليل تفاصيل العرض...'
+      );
+
+
+      try {
+        const imageDataUrl =
+          file
+            ? await importImageFileToDataUrl(
+                file
+              )
+            : null;
+
+
+        const response =
+          await fetch(
+            AI_IMPORT_ENDPOINT,
+            {
+              method:
+                'POST',
+
+              headers: {
+                'Content-Type':
+                  'application/json'
+              },
+
+              body:
+                JSON.stringify({
+                  prompt,
+                  imageDataUrl
+                })
+            }
+          );
+
+
+        let result;
+
+
+        try {
+          result =
+            await response.json();
+        } catch {
+          throw new Error(
+            'الـWorker أعاد استجابة غير صالحة'
+          );
+        }
+
+
+        if (
+          !response.ok
+        ) {
+          throw new Error(
+            result?.error ||
+            `فشل الاستيراد، رمز الخطأ ${response.status}`
+          );
+        }
+
+
+        if (
+          !result?.offer
+        ) {
+          throw new Error(
+            'لم يتم العثور على بيانات عرض في الاستجابة'
+          );
+        }
+
+
+        applyImportedOffer(
+          result.offer,
+          mode
+        );
+
+
+        $('#importOfferDialog')
+          ?.close();
+
+
+        clearImportImagePreview();
+
+
+        toast(
+          'تم استيراد بيانات العرض بنجاح'
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          '[AI Offer Import]',
+          error
+        );
+
+
+        setImportStatus(
+          error?.message ||
+          'تعذر استيراد العرض',
+          true
+        );
+      } finally {
+        if (
+          button
+        ) {
+          button.disabled =
+            false;
+
+
+          button.textContent =
+            originalText;
+        }
+      }
+    }
+  );
 
   /* =========================================================
      WINDOW
