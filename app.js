@@ -2785,69 +2785,79 @@ image.alt =
 
 
   function hotelCityGroupsHtml(
-    items
-  ) {
-    return state.hotelCities
-      .map(
-        (
-          city,
-          cityIndex
-        ) => {
-          const hotels =
-            items.filter(
-              item =>
-                item.city ===
-                city
-            );
+  items
+) {
+  return state.hotelCities
+    .map(
+      (
+        city,
+        cityIndex
+      ) => {
+        const hotels =
+          items.filter(
+            item =>
+              item.city ===
+              city
+          );
 
 
-          return `
-            <section
-              class="hotel-city-group"
-              data-city="${escapeHtml(city)}"
-            >
+        return `
+          <section
+            class="hotel-city-group"
+            data-city="${escapeHtml(city)}"
+          >
 
-              <div class="hotel-city-head">
+            <div class="hotel-city-head">
 
-                <label class="hotel-city-name-field">
+              <label class="hotel-city-name-field">
 
-                  المدينة
+                المدينة
 
-                  <input
-                    class="city-name-input"
-                    data-city-index="${cityIndex}"
-                    type="text"
-                    value="${escapeHtml(city)}"
-                  >
+                <input
+                  class="city-name-input"
+                  data-city-index="${cityIndex}"
+                  type="text"
+                  value="${escapeHtml(city)}"
+                >
 
-                </label>
+              </label>
 
-              </div>
+              <button
+                class="delete-hotel-city-btn"
+                type="button"
+                data-city="${escapeHtml(city)}"
+                aria-label="حذف المدينة"
+                title="حذف المدينة"
+              >
+                حذف
+              </button>
 
-              <div class="hotel-city-list">
+            </div>
 
-                ${
-                  hotels.length
-                    ? hotels
-                        .map(
-                          serviceRow
-                        )
-                        .join('')
-                    : `
-                      <p class="city-empty">
-                        لا توجد فنادق في هذه المدينة.
-                      </p>
-                    `
-                }
+            <div class="hotel-city-list">
 
-              </div>
+              ${
+                hotels.length
+                  ? hotels
+                      .map(
+                        serviceRow
+                      )
+                      .join('')
+                  : `
+                    <p class="city-empty">
+                      لا توجد فنادق في هذه المدينة.
+                    </p>
+                  `
+              }
 
-            </section>
-          `;
-        }
-      )
-      .join('');
-  }
+            </div>
+
+          </section>
+        `;
+      }
+    )
+    .join('');
+}
 
 
   function categoryGroups() {
@@ -4656,7 +4666,92 @@ image.alt =
         ) {
           return;
         }
+const deleteCityButton =
+  event.target.closest(
+    '.delete-hotel-city-btn'
+  );
 
+
+if (
+  deleteCityButton
+) {
+  const city =
+    String(
+      deleteCityButton.dataset.city ||
+      ''
+    ).trim();
+
+
+  if (
+    !city
+  ) {
+    return;
+  }
+
+
+  const hotelsInCity =
+    state.services.filter(
+      item =>
+        item.category ===
+          'hotel' &&
+        item.city ===
+          city
+    );
+
+
+  if (
+    hotelsInCity.length
+  ) {
+    const confirmed =
+      window.confirm(
+        `يوجد ${hotelsInCity.length} فندق في ${city}. هل تريد حذف المدينة وجميع فنادقها؟`
+      );
+
+
+    if (
+      !confirmed
+    ) {
+      return;
+    }
+
+
+    state.services =
+      state.services.filter(
+        item =>
+          !(
+            item.category ===
+              'hotel' &&
+            item.city ===
+              city
+          )
+      );
+  }
+
+
+  state.hotelCities =
+    state.hotelCities.filter(
+      currentCity =>
+        currentCity !==
+        city
+    );
+
+
+  renderServices();
+
+
+  updateSummary();
+
+
+  scheduleAutoSave();
+
+
+  toast(
+    `تم حذف ${city} من الفنادق`
+  );
+
+
+  return;
+}
 
         const row =
           handle.closest(
