@@ -3949,3 +3949,37 @@ dialog::backdrop {
   min-width: 0;
   margin: 0;
 }
+.hotel-city-head {
+  position: relative;
+  gap: 12px;
+}
+
+.delete-hotel-city-btn {
+  min-width: 64px;
+  height: 38px;
+  margin-top: 21px;
+
+  padding: 0 12px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid #f0d7d7;
+  border-radius: 10px;
+
+  color: #b84848;
+  background: #fff7f7;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+
+  cursor: pointer;
+}
+
+.delete-hotel-city-btn:hover {
+  color: #ffffff;
+  background: #b84848;
+  border-color: #b84848;
+}
