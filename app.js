@@ -2859,6 +2859,100 @@ image.alt =
     .join('');
 }
 
+function deleteHotelCity(
+  city
+) {
+  const cityName =
+    String(
+      city || ''
+    ).trim();
+
+
+  if (
+    !cityName
+  ) {
+    return;
+  }
+
+
+  const hotelsInCity =
+    state.services.filter(
+      item =>
+        item.category ===
+          'hotel' &&
+        String(
+          item.city || ''
+        ).trim() ===
+          cityName
+    );
+
+
+  /*
+   * إذا كانت المدينة تحتوي على فنادق
+   * نطلب تأكيد قبل حذفها.
+   */
+  if (
+    hotelsInCity.length >
+    0
+  ) {
+    const confirmed =
+      window.confirm(
+        `يوجد ${hotelsInCity.length} فندق في ${cityName}. هل تريد حذف المدينة وجميع فنادقها؟`
+      );
+
+
+    if (
+      !confirmed
+    ) {
+      return;
+    }
+
+
+    state.services =
+      state.services.filter(
+        item =>
+          !(
+            item.category ===
+              'hotel' &&
+            String(
+              item.city || ''
+            ).trim() ===
+              cityName
+          )
+      );
+  }
+
+
+  /*
+   * حذف المدينة نفسها من القائمة.
+   */
+  state.hotelCities =
+    state.hotelCities.filter(
+      currentCity =>
+        String(
+          currentCity || ''
+        ).trim() !==
+          cityName
+    );
+
+
+  renderServices();
+
+
+  updateSummary();
+
+
+  currentOfferTouched =
+    true;
+
+
+  scheduleAutoSave();
+
+
+  toast(
+    `تم حذف ${cityName}`
+  );
+}
 
   function categoryGroups() {
     return Object.keys(
@@ -4648,7 +4742,39 @@ image.alt =
 
   const servicesList =
     $('#servicesList');
+servicesList
+  ?.addEventListener(
+    'click',
 
+    event => {
+      const button =
+        event.target.closest(
+          '.delete-hotel-city-btn'
+        );
+
+
+      if (
+        !button
+      ) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      event.stopPropagation();
+
+
+      const city =
+        button.dataset.city;
+
+
+      deleteHotelCity(
+        city
+      );
+    }
+  );
 
   servicesList
     ?.addEventListener(
@@ -4666,10 +4792,7 @@ image.alt =
         ) {
           return;
         }
-const deleteCityButton =
-  event.target.closest(
-    '.delete-hotel-city-btn'
-  );
+
 
 
 if (
