@@ -3849,7 +3849,74 @@ function deleteHotelCity(
   /* =========================================================
      CLIENT VIEW
      ========================================================= */
+function updateClientSectionNumbers() {
+  const sectionIds = [
+    'clientFlightsSection',
+    'clientHotelsSection',
+    'clientTransfersSection',
+    'clientActivitiesSection',
+    'clientItinerarySection'
+  ];
 
+
+  let visibleNumber =
+    1;
+
+
+  sectionIds.forEach(
+    id => {
+      const section =
+        $(`#${id}`);
+
+
+      if (
+        !section
+      ) {
+        return;
+      }
+
+
+      /*
+       * القسم المخفي لا يأخذ رقم.
+       */
+      if (
+        section.hidden ||
+        getComputedStyle(
+          section
+        ).display ===
+          'none'
+      ) {
+        return;
+      }
+
+
+      const numberElement =
+        section.querySelector(
+          '[data-client-section-number]'
+        );
+
+
+      if (
+        !numberElement
+      ) {
+        return;
+      }
+
+
+      numberElement.textContent =
+        String(
+          visibleNumber
+        ).padStart(
+          2,
+          '0'
+        );
+
+
+      visibleNumber +=
+        1;
+    }
+  );
+}
   function buildClientView() {
     const errors =
       validate(
@@ -4150,7 +4217,7 @@ function deleteHotelCity(
         !$('#showItinerary')?.checked ||
         !state.itinerary.length;
     }
-
+updateClientSectionNumbers();
 
     const priceSection =
       $('#clientPriceSection');
