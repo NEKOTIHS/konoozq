@@ -28,6 +28,7 @@
   href="./styles.css?v=20260915-1"
 >
 
+</head>
 
 <body>
 
@@ -39,35 +40,48 @@
 
     <header class="topbar no-print">
 
-      <a
-        class="brand"
-        href="#"
-        aria-label="كنوز السفر"
+  <div class="brand-side">
+
+    <button
+  id="openClientIntakeBtn"
+  class="btn btn-primary" client-info-top-btn"
+  type="button"
+>
+  إدخال معلومات العميل
+</button>
+
+
+    <a
+      class="brand"
+      href="#"
+      aria-label="كنوز السفر"
+    >
+
+      <span
+        class="brand-mark"
+        aria-hidden="true"
       >
+        ك
+      </span>
 
-        <span
-          class="brand-mark"
-          aria-hidden="true"
-        >
-          ك
-        </span>
+      <span>
 
-        <span>
+        <strong id="appBrandName">
+          كنوز السفر
+        </strong>
 
-          <strong id="appBrandName">
-            كنوز السفر
-          </strong>
+        <small id="appBrandTagline">
+          منشئ العروض السياحية
+        </small>
 
-          <small id="appBrandTagline">
-            منشئ العروض السياحية
-          </small>
+      </span>
 
-        </span>
+    </a>
 
-      </a>
+  </div>
 
 
-      <div class="header-actions">
+  <div class="header-actions">
 
         <div
   class="drive-connection"
@@ -92,7 +106,7 @@
 
 
   <button
-    class="btn btn-ghost drive-connect-btn"
+    class="btn btn-secondary drive-connect-btn"
     id="connectGoogleDriveBtn"
     type="button"
   >
@@ -124,7 +138,7 @@
 
 
         <button
-          class="btn btn-ghost"
+          class="btn btn-primary"
           id="resetSampleBtn"
           type="button"
         >
@@ -781,7 +795,7 @@
   >
 </label>
 
-            </label>
+            
 
 
             <label>
@@ -1244,7 +1258,7 @@
 
 
           <button
-            class="btn btn-primary btn-block"
+            class="btn btn-secondary btn-block"
             id="previewClientBtn"
             type="button"
           >
@@ -1271,25 +1285,29 @@
   </button>
 
   <div class="offer-action-row">
+  <button
+    id="savedOffersBtn"
+    class="btn btn-secondary"
+    type="button"
+  >
+    العروض المحفوظة
+  </button>
 
-    <button
-      id="savedOffersBtn"
-      class="btn btn-secondary"
-      type="button"
-    >
-      العروض المحفوظة
-    </button>
+  <button
+    id="clientIntakesBtn"
+    class="btn btn-secondary"
+    type="button"
+  >
+    طلبات العملاء
+  </button>
 
-    <button
-      id="newOfferBtn"
-      class="btn btn-secondary"
-      type="button"
-    >
-      + عرض جديد
-    </button>
-
-  </div>
-
+  <button
+    id="newOfferBtn"
+    class="btn btn-secondary"
+    type="button"
+  >
+    + عرض جديد
+  </button>
 </div>
 
 
@@ -1913,7 +1931,23 @@
           >
 
         </label>
+<label
+  id="newFlightTypeWrap"
+>
+  نوع الطيران
 
+  <select id="newFlightType">
+
+    <option value="international">
+      طيران دولي
+    </option>
+
+    <option value="domestic">
+      طيران داخلي
+    </option>
+
+  </select>
+</label>
 
         <label class="full-width">
 
@@ -2534,7 +2568,7 @@
         class="btn btn-ghost"
         type="submit"
       >
-        ✨ تحليل واستيراد
+         تحليل واستيراد
       </button>
 
       <button
@@ -2546,6 +2580,99 @@
       </button>
     </div>
   </form>
+</dialog>
+<dialog
+  id="clientIntakesDialog"
+  class="client-intakes-dialog"
+>
+  <div class="client-intakes-panel">
+
+    <div class="client-intakes-header">
+
+      <div>
+        <h2>
+          طلبات العملاء
+        </h2>
+
+        <p>
+          ابحث باسم العميل أو الجوال أو الوجهة أو رقم الطلب
+        </p>
+      </div>
+
+      <div class="client-intakes-header-actions">
+
+  <button
+    id="changeClientIntakesKeyBtn"
+    class="btn btn-ghost"
+    type="button"
+  >
+    تغيير كلمة السر
+  </button>
+
+  <button
+    id="closeClientIntakesBtn"
+    class="btn"
+    type="button"
+    aria-label="إغلاق"
+  >
+    إغلاق
+  </button>
+
+</div>
+
+    </div>
+
+
+    <div class="client-intakes-search-row">
+
+  <input
+    id="clientIntakesSearch"
+    type="search"
+    placeholder="مثال: خالد، 050، دبي، KZ-..."
+    autocomplete="off"
+  >
+
+  <select
+    id="clientIntakesStatusFilter"
+    aria-label="حالة الطلب"
+  >
+    <option value="all">
+      كل الطلبات
+    </option>
+
+    <option value="new">
+      طلبات جديدة
+    </option>
+
+    <option value="imported">
+      تم الاستيراد
+    </option>
+  </select>
+
+  <button
+    id="refreshClientIntakesBtn"
+    class="btn btn-primary"
+    type="button"
+  >
+    بحث
+  </button>
+
+</div>
+
+
+    <p
+      id="clientIntakesStatus"
+      class="client-intakes-status"
+      hidden
+    ></p>
+
+
+    <div
+      id="clientIntakesList"
+      class="client-intakes-list"
+    ></div>
+
+  </div>
 </dialog>
 
   <script
