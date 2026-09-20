@@ -4267,3 +4267,25 @@ dialog::backdrop {
   text-decoration: none;
   white-space: nowrap;
 }
+.import-client-intake-btn.is-imported {
+  color: #ffffff;
+  background: #74aa9e;
+  box-shadow: none;
+}
+
+.import-client-intake-btn.is-imported .imported-hover-label {
+  display: none;
+}
+
+.import-client-intake-btn.is-imported:hover {
+  color: #ffffff;
+  background: #0b5d4b;
+}
+
+.import-client-intake-btn.is-imported:hover .imported-normal-label {
+  display: none;
+}
+
+.import-client-intake-btn.is-imported:hover .imported-hover-label {
+  display: inline;
+}
