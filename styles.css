@@ -3983,3 +3983,287 @@ dialog::backdrop {
   background: #b84848;
   border-color: #b84848;
 }
+.client-intakes-dialog {
+  width: min(860px, calc(100% - 24px));
+  max-height: min(86vh, 820px);
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 20px;
+
+  background: transparent;
+}
+
+.client-intakes-dialog::backdrop {
+  background: rgba(8, 28, 24, 0.52);
+  backdrop-filter: blur(3px);
+}
+
+.client-intakes-panel {
+  max-height: min(86vh, 820px);
+
+  overflow: auto;
+
+  padding: 22px;
+
+  border: 1px solid #dfe9e5;
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 24px 70px rgba(0, 0, 0, 0.18);
+}
+
+.client-intakes-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 18px;
+
+  margin-bottom: 18px;
+}
+
+.client-intakes-header h2 {
+  margin: 0 0 5px;
+
+  color: #0a5d4c;
+
+  font-size: 22px;
+}
+
+.client-intakes-header p {
+  margin: 0;
+
+  color: #74857f;
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.client-intakes-search-row {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1fr)
+    auto;
+
+  gap: 10px;
+
+  margin-bottom: 12px;
+}
+
+.client-intakes-search-row input {
+  width: 100%;
+  min-height: 44px;
+
+  padding: 0 13px;
+
+  border: 1px solid #dce7e3;
+  border-radius: 11px;
+
+  outline: none;
+
+  color: #183b33;
+  background: #ffffff;
+}
+
+.client-intakes-search-row input:focus {
+  border-color: #0a6c57;
+
+  box-shadow:
+    0 0 0 3px rgba(10, 108, 87, 0.08);
+}
+
+.client-intakes-status {
+  margin: 10px 0;
+
+  padding: 11px 12px;
+
+  border-radius: 10px;
+
+  color: #46655d;
+  background: #f3f8f6;
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.client-intakes-status.is-error {
+  color: #9a3d3d;
+  background: #fff1f1;
+}
+
+.client-intakes-list {
+  display: grid;
+  gap: 10px;
+}
+
+.client-intake-card {
+  padding: 14px;
+
+  border: 1px solid #dfe9e5;
+  border-radius: 14px;
+
+  background: #fbfdfc;
+}
+
+.client-intake-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 10px;
+}
+
+.client-intake-card h3 {
+  margin: 0 0 4px;
+
+  color: #123f35;
+
+  font-size: 15px;
+}
+
+.client-intake-code {
+  color: #b78a32;
+
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.client-intake-meta {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 8px 14px;
+}
+
+.client-intake-meta-item {
+  color: #506c64;
+
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.client-intake-meta-item strong {
+  color: #173f36;
+}
+
+.client-intake-notes {
+  margin-top: 10px;
+
+  padding-top: 10px;
+
+  border-top: 1px dashed #dfe8e4;
+
+  color: #62766f;
+
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.client-intake-actions {
+  margin-top: 12px;
+
+  display: flex;
+  justify-content: flex-end;
+}
+
+.client-intake-actions .btn {
+  min-width: 150px;
+}
+
+.client-intake-empty {
+  padding: 30px 14px;
+
+  border: 1px dashed #d9e5e1;
+  border-radius: 14px;
+
+  color: #7e918a;
+
+  text-align: center;
+
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+  .client-intakes-panel {
+    padding: 16px;
+  }
+
+  .client-intakes-header {
+    flex-direction: column;
+  }
+
+  .client-intakes-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .client-intake-card-top {
+    flex-direction: column;
+  }
+
+  .client-intake-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .client-intake-actions .btn {
+    width: 100%;
+  }
+}
+.client-intakes-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  flex-shrink: 0;
+}
+
+.client-intakes-header-actions .btn {
+  white-space: nowrap;
+}
+
+@media (max-width: 640px) {
+  .client-intakes-header-actions {
+    width: 100%;
+  }
+
+  .client-intakes-header-actions .btn {
+    flex: 1;
+  }
+}
+.delete-client-intake-btn {
+  color: #a74848;
+  background: #fff0f0;
+  border: 1px solid #f1cccc;
+}
+
+.delete-client-intake-btn:hover {
+  color: #ffffff;
+  background: #a74848;
+  border-color: #a74848;
+}
+
+.delete-client-intake-btn:disabled {
+  color: #a74848;
+  background: #f8dddd;
+}
+.brand-side {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  direction: rtl;
+}
+
+.client-info-top-btn {
+  flex: 0 0 auto;
+  text-decoration: none;
+  white-space: nowrap;
+}
