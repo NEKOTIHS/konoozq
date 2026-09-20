@@ -9,6 +9,12 @@
      const AI_IMPORT_ENDPOINT =
   'https://konoozagent.khaledsan201031.workers.dev/import-offer';
   
+  const CLIENT_INTAKES_ENDPOINT =
+  'https://konoozagent.khaledsan201031.workers.dev/intakes';
+  let currentClientIntakes = [];
+  let clientIntakesSearchTimer =
+  null;
+
   const categories = {
     flight: {
       label: 'الطيران',
@@ -2306,18 +2312,26 @@ image.alt =
 
 
   function serviceQtyLabel(
-    item
+  item
+) {
+  if (
+    item.category ===
+    'hotel'
   ) {
-    if (
-      item.category ===
-      'hotel'
-    ) {
-      return 'عدد الأشخاص';
-    }
-
-
-    return 'الكمية';
+    return 'عدد الأشخاص';
   }
+
+
+  if (
+    item.category ===
+    'flight'
+  ) {
+    return 'عدد المسافرين';
+  }
+
+
+  return 'الكمية';
+}
 
 
   /* =========================================================
@@ -2479,8 +2493,16 @@ image.alt =
                         </b>
 
                         <span>
-                          الرحلة ${index + 1}
-                        </span>
+  ${
+    ensureFlightSegments(item).length === 2
+      ? (
+          index === 0
+            ? 'رحلة الذهاب'
+            : 'رحلة العودة'
+        )
+      : `الرحلة ${index + 1}`
+  }
+</span>
 
                         <strong>
                           ${escapeHtml(
@@ -4635,7 +4657,17 @@ updateClientSectionNumbers();
 
     const hotelDates =
       $('#newHotelDates');
+const flightTypeWrap =
+  $('#newFlightTypeWrap');
 
+
+if (
+  flightTypeWrap
+) {
+  flightTypeWrap.hidden =
+    category !==
+      'flight';
+}
 
     if (
       flightDates
@@ -4744,7 +4776,44 @@ updateClientSectionNumbers();
       }
     }
   }
+function updateNewFlightType() {
+  const category =
+    $('#newServiceCategory')
+      ?.value ||
+    '';
 
+
+  if (
+    category !==
+      'flight'
+  ) {
+    return;
+  }
+
+
+  const flightType =
+    $('#newFlightType')
+      ?.value ||
+    'international';
+
+
+  const nameInput =
+    $('#newServiceName');
+
+
+  if (
+    !nameInput
+  ) {
+    return;
+  }
+
+
+  nameInput.value =
+    flightType ===
+      'domestic'
+      ? 'تذاكر الطيران الداخلي'
+      : 'تذاكر الطيران الدولي';
+}
 
   function openServiceDialog(
     category = 'flight',
@@ -4779,7 +4848,12 @@ updateClientSectionNumbers();
 
 
     updateNewServiceScheduleFields();
-
+if (
+  category ===
+    'flight'
+) {
+  updateNewFlightType();
+}
 
     $('#serviceDialog')
       ?.showModal();
@@ -4828,9 +4902,7 @@ servicesList
 
 
       event.preventDefault();
-
-
-      event.stopPropagation();
+event.stopImmediatePropagation();
 
 
       const city =
@@ -6147,10 +6219,28 @@ if (
      ========================================================= */
 
   $('#newServiceCategory')
-    ?.addEventListener(
-      'change',
-      updateNewServiceScheduleFields
-    );
+  ?.addEventListener(
+    'change',
+    () => {
+      updateNewServiceScheduleFields();
+
+
+      if (
+        $('#newServiceCategory')
+          ?.value ===
+          'flight'
+      ) {
+        updateNewFlightType();
+      }
+    }
+  );
+
+
+$('#newFlightType')
+  ?.addEventListener(
+    'change',
+    updateNewFlightType
+  );
 
 
   $('#addServiceBtn')
@@ -14245,7 +14335,1988 @@ $('#importOfferForm')
       }
     }
   );
+function getIntakesAdminKey() {
+  let key =
+    sessionStorage.getItem(
+      'konooz-intakes-admin-key'
+    ) ||
+    '';
 
+
+  if (
+    key
+  ) {
+    return key;
+  }
+
+
+  key =
+    (
+      window.prompt(
+        'أدخل مفتاح إدارة طلبات العملاء'
+      ) ||
+      ''
+    )
+      .trim();
+
+
+  if (
+    key
+  ) {
+    sessionStorage.setItem(
+      'konooz-intakes-admin-key',
+      key
+    );
+  }
+
+
+  return key;
+}
+
+
+function setClientIntakesStatus(
+  message,
+  type = ''
+) {
+  const status =
+    $('#clientIntakesStatus');
+
+
+  if (
+    !status
+  ) {
+    return;
+  }
+
+
+  status.hidden =
+    !message;
+
+
+  status.textContent =
+    message;
+
+
+  status.classList.toggle(
+    'is-error',
+    type === 'error'
+  );
+}
+
+
+function formatIntakeDate(
+  value
+) {
+  if (
+    !value
+  ) {
+    return 'غير محدد';
+  }
+function formatIntakeCreatedAt(
+  value
+) {
+  if (
+    !value
+  ) {
+    return 'غير محدد';
+  }
+
+
+  const date =
+    new Date(
+      value
+    );
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return value;
+  }
+
+
+  return date.toLocaleString(
+    'ar-SA',
+    {
+      year:
+        'numeric',
+
+      month:
+        '2-digit',
+
+      day:
+        '2-digit',
+
+      hour:
+        '2-digit',
+
+      minute:
+        '2-digit'
+    }
+  );
+}
+
+  const date =
+    new Date(
+      value
+    );
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return value;
+  }
+
+
+  return date.toLocaleDateString(
+    'ar-SA',
+    {
+      year:
+        'numeric',
+
+      month:
+        '2-digit',
+
+      day:
+        '2-digit'
+    }
+  );
+}
+function formatIntakeCreatedAt(
+  value
+) {
+  if (
+    !value
+  ) {
+    return 'غير محدد';
+  }
+
+
+  const date =
+    new Date(
+      value
+    );
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return value;
+  }
+
+
+  return date.toLocaleString(
+    'ar-SA',
+    {
+      year:
+        'numeric',
+
+      month:
+        '2-digit',
+
+      day:
+        '2-digit',
+
+      hour:
+        '2-digit',
+
+      minute:
+        '2-digit'
+    }
+  );
+}
+
+function intakeValue(
+  value
+) {
+  const text =
+    String(
+      value ??
+      ''
+    )
+      .trim();
+
+
+  return text ||
+    'غير محدد';
+}
+
+
+function renderClientIntakes(
+  items
+) {
+  currentClientIntakes =
+    Array.isArray(items)
+      ? items
+      : [];
+
+
+  const list =
+    $('#clientIntakesList');
+
+
+  if (
+    !list
+  ) {
+    return;
+  }
+
+
+  if (
+    !Array.isArray(
+      items
+    ) ||
+    !items.length
+  ) {
+    list.innerHTML = `
+      <div class="client-intake-empty">
+        لا توجد طلبات مطابقة
+      </div>
+    `;
+
+
+    return;
+  }
+
+
+  list.innerHTML =
+    items
+      .map(
+        item => `
+          <article
+            class="client-intake-card"
+            data-intake-id="${escapeHtml(item.id || '')}"
+          >
+
+            <div class="client-intake-card-top">
+
+              <div>
+                <h3>
+                  ${escapeHtml(
+                    intakeValue(
+                      item.client_name
+                    )
+                  )}
+                </h3>
+
+                <div class="client-intake-code">
+                  ${escapeHtml(
+                    intakeValue(
+                      item.public_code
+                    )
+                  )}
+                </div>
+              </div>
+
+              <span class="client-intake-code">
+                ${escapeHtml(
+                  item.status ===
+                    'imported'
+                    ? 'تم الاستيراد'
+                    : 'طلب جديد'
+                )}
+              </span>
+
+            </div>
+<div class="client-intake-meta-item">
+  <strong>
+    تاريخ الطلب:
+  </strong>
+
+  ${escapeHtml(
+    formatIntakeCreatedAt(
+      item.created_at
+    )
+  )}
+</div>
+
+              <div class="client-intake-meta-item">
+                <strong>
+                  الجوال:
+                </strong>
+
+                ${escapeHtml(
+                  intakeValue(
+                    item.phone
+                  )
+                )}
+              </div>
+
+
+              <div class="client-intake-meta-item">
+                <strong>
+                  البريد:
+                </strong>
+
+                ${escapeHtml(
+                  intakeValue(
+                    item.email
+                  )
+                )}
+              </div>
+
+
+              <div class="client-intake-meta-item">
+                <strong>
+                  من:
+                </strong>
+
+                ${escapeHtml(
+                  intakeValue(
+                    item.origin
+                  )
+                )}
+              </div>
+
+
+              <div class="client-intake-meta-item">
+                <strong>
+                  إلى:
+                </strong>
+
+                ${escapeHtml(
+                  intakeValue(
+                    item.destination
+                  )
+                )}
+              </div>
+
+
+              <div class="client-intake-meta-item">
+                <strong>
+                  السفر:
+                </strong>
+
+                ${escapeHtml(
+                  formatIntakeDate(
+                    item.start_date
+                  )
+                )}
+              </div>
+
+
+              <div class="client-intake-meta-item">
+                <strong>
+                  العودة:
+                </strong>
+
+                ${escapeHtml(
+                  formatIntakeDate(
+                    item.end_date
+                  )
+                )}
+              </div>
+
+
+              <div class="client-intake-meta-item">
+  <strong>
+    المسافرون:
+  </strong>
+
+  ${escapeHtml(
+    String(
+      item.adults ??
+      1
+    )
+  )}
+  بالغ
+
+  ${Number(
+    item.children ||
+    0
+  ) > 0
+    ? `، ${escapeHtml(
+        String(
+          item.children
+        )
+      )} طفل`
+    : ''
+  }
+</div>
+
+
+${
+  item.child_ages
+    ? `
+      <div class="client-intake-meta-item">
+        <strong>
+          أعمار الأطفال:
+        </strong>
+
+        ${escapeHtml(
+          String(
+            item.child_ages
+          )
+            .split(',')
+            .map(
+              age =>
+                `${age.trim()} سنة`
+            )
+            .join('، ')
+        )}
+      </div>
+    `
+    : ''
+}
+
+
+              <div class="client-intake-meta-item">
+                <strong>
+                  الميزانية:
+                </strong>
+
+                ${escapeHtml(
+                  intakeValue(
+                    item.budget
+                  )
+                )}
+              </div>
+<div class="client-intake-meta-item">
+  <strong>
+    تصنيف الفندق:
+  </strong>
+
+  ${
+    item.hotel_stars
+      ? `${escapeHtml(
+          String(
+            item.hotel_stars
+          )
+        )} نجوم`
+      : 'غير محدد'
+  }
+</div>
+
+
+<div class="client-intake-meta-item">
+  <strong>
+    درجة الطيران:
+  </strong>
+
+  ${escapeHtml(
+    intakeValue(
+      item.flight_class
+    )
+  )}
+</div>
+
+
+<div class="client-intake-meta-item">
+  <strong>
+    نوع الرحلة:
+  </strong>
+
+  ${escapeHtml(
+    intakeValue(
+      item.trip_style
+    )
+  )}
+</div>
+            </div>
+
+
+            ${
+              item.notes
+                ? `
+                  <div class="client-intake-notes">
+                    ${escapeHtml(
+                      item.notes
+                    )}
+                  </div>
+                `
+                : ''
+            }
+
+
+            <div class="client-intake-actions">
+
+  <button
+    type="button"
+    class="btn btn-primary import-client-intake-btn"
+    data-intake-id="${escapeHtml(item.id || '')}"
+    ${item.status === 'imported' ? 'disabled' : ''}
+  >
+    ${
+      item.status === 'imported'
+        ? 'تم الاستيراد'
+        : 'استيراد إلى عرض جديد'
+    }
+  </button>
+
+
+  <button
+    type="button"
+    class="btn btn-ghost delete-client-intake-btn"
+    data-intake-id="${escapeHtml(item.id || '')}"
+  >
+    حذف الطلب
+  </button>
+
+</div>
+
+          </article>
+        `
+      )
+      .join('');
+}
+
+
+async function loadClientIntakes(
+  query = ''
+) {
+  const key =
+    getIntakesAdminKey();
+
+
+  if (
+    !key
+  ) {
+    setClientIntakesStatus(
+      'لم يتم إدخال مفتاح الإدارة',
+      'error'
+    );
+
+
+    return;
+  }
+
+
+  const list =
+    $('#clientIntakesList');
+
+
+  if (
+    list
+  ) {
+    list.innerHTML =
+      '';
+  }
+
+
+  setClientIntakesStatus(
+    'جاري تحميل الطلبات...'
+  );
+
+
+  const url =
+    new URL(
+      CLIENT_INTAKES_ENDPOINT
+    );
+
+
+  const cleanQuery =
+    String(
+      query ||
+      ''
+    )
+      .trim();
+
+
+  if (
+    cleanQuery
+  ) {
+    url.searchParams.set(
+      'q',
+      cleanQuery
+    );
+  }
+const statusFilter =
+  $('#clientIntakesStatusFilter')
+    ?.value ||
+  'all';
+
+
+if (
+  statusFilter !==
+    'all'
+) {
+  url.searchParams.set(
+    'status',
+    statusFilter
+  );
+}
+
+  try {
+    const response =
+      await fetch(
+        url.toString(),
+        {
+          method:
+            'GET',
+
+          headers: {
+            'X-Admin-Key':
+              key
+          }
+        }
+      );
+
+
+    let result;
+
+
+    try {
+      result =
+        await response.json();
+    } catch {
+      throw new Error(
+        'استجابة الخادم غير صالحة'
+      );
+    }
+
+
+    if (
+      response.status ===
+        401
+    ) {
+      sessionStorage.removeItem(
+        'konooz-intakes-admin-key'
+      );
+
+
+      throw new Error(
+        'مفتاح الإدارة غير صحيح'
+      );
+    }
+
+
+    if (
+      !response.ok
+    ) {
+      throw new Error(
+        result?.error ||
+        'تعذر تحميل الطلبات'
+      );
+    }
+
+
+    renderClientIntakes(
+  result.results ||
+  []
+);
+
+
+    setClientIntakesStatus(
+      ''
+    );
+  } catch (
+    error
+  ) {
+    console.error(
+      '[Client Intakes]',
+      error
+    );
+
+
+    renderClientIntakes(
+      []
+    );
+
+
+    setClientIntakesStatus(
+      error?.message ||
+      'تعذر تحميل الطلبات',
+      'error'
+    );
+  }
+}
+
+
+$('#clientIntakesBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      const dialog =
+        $('#clientIntakesDialog');
+
+
+      dialog?.showModal();
+
+
+      loadClientIntakes(
+        $('#clientIntakesSearch')
+          ?.value ||
+        ''
+      );
+    }
+  );
+
+
+$('#closeClientIntakesBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      $('#clientIntakesDialog')
+        ?.close();
+    }
+  );
+$('#changeClientIntakesKeyBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      const storageKey =
+        'konooz-intakes-admin-key';
+
+
+      const oldKey =
+        sessionStorage.getItem(
+          storageKey
+        ) ||
+        '';
+
+
+      sessionStorage.removeItem(
+        storageKey
+      );
+
+
+      const newKey =
+        getIntakesAdminKey();
+
+
+      if (
+        !newKey
+      ) {
+        if (
+          oldKey
+        ) {
+          sessionStorage.setItem(
+            storageKey,
+            oldKey
+          );
+        }
+
+
+        setClientIntakesStatus(
+          'لم يتم تغيير كلمة السر'
+        );
+
+
+        return;
+      }
+
+
+      setClientIntakesStatus(
+        'جاري التحقق من كلمة السر الجديدة...'
+      );
+
+
+      loadClientIntakes(
+        $('#clientIntakesSearch')
+          ?.value ||
+        ''
+      );
+    }
+  );
+
+$('#clientIntakesStatusFilter')
+  ?.addEventListener(
+    'change',
+    () => {
+      loadClientIntakes(
+        $('#clientIntakesSearch')
+          ?.value ||
+        ''
+      );
+    }
+  );
+
+
+$('#clientIntakesSearch')
+  ?.addEventListener(
+    'keydown',
+    event => {
+      if (
+        event.key !==
+          'Enter'
+      ) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      loadClientIntakes(
+        event.currentTarget.value
+      );
+    }
+  );
+  $('#clientIntakesSearch')
+  ?.addEventListener(
+    'input',
+    event => {
+      clearTimeout(
+        clientIntakesSearchTimer
+      );
+
+
+      const query =
+        event.currentTarget.value;
+
+
+      clientIntakesSearchTimer =
+        setTimeout(
+          () => {
+            loadClientIntakes(
+              query
+            );
+          },
+          400
+        );
+    }
+  );
+  function setFormFieldValue(
+  selector,
+  value
+) {
+  const element =
+    $(selector);
+
+
+  if (
+    !element
+  ) {
+    return;
+  }
+
+
+  element.value =
+    value ??
+    '';
+
+
+  element.dispatchEvent(
+    new Event(
+      'input',
+      {
+        bubbles:
+          true
+      }
+    )
+  );
+
+
+  element.dispatchEvent(
+    new Event(
+      'change',
+      {
+        bubbles:
+          true
+      }
+    )
+  );
+}
+
+
+function buildIntakeNotes(
+  intake
+) {
+  const parts = [];
+
+
+  if (
+    intake.public_code
+  ) {
+    parts.push(
+      `رقم طلب العميل: ${intake.public_code}`
+    );
+  }
+
+
+  if (
+    intake.phone
+  ) {
+    parts.push(
+      `الجوال: ${intake.phone}`
+    );
+  }
+
+
+  if (
+    intake.email
+  ) {
+    parts.push(
+      `البريد الإلكتروني: ${intake.email}`
+    );
+  }
+
+
+  if (
+    intake.origin
+  ) {
+    parts.push(
+      `مدينة المغادرة: ${intake.origin}`
+    );
+  }
+
+
+  if (
+    intake.destination
+  ) {
+    parts.push(
+      `الوجهة: ${intake.destination}`
+    );
+  }
+
+
+  if (
+    intake.start_date
+  ) {
+    parts.push(
+      `تاريخ السفر: ${intake.start_date}`
+    );
+  }
+
+
+  if (
+    intake.end_date
+  ) {
+    parts.push(
+      `تاريخ العودة: ${intake.end_date}`
+    );
+  }
+
+
+  const adults =
+    Number(
+      intake.adults ||
+      0
+    );
+
+
+  const children =
+    Number(
+      intake.children ||
+      0
+    );
+
+
+  if (
+    adults > 0 ||
+    children > 0
+  ) {
+    const travelers = [];
+
+
+    if (
+      adults > 0
+    ) {
+      travelers.push(
+        `${adults} بالغ`
+      );
+    }
+
+
+    if (
+      children > 0
+    ) {
+      travelers.push(
+        `${children} طفل`
+      );
+    }
+
+
+    parts.push(
+      `المسافرون: ${travelers.join('، ')}`
+    );
+  }
+
+
+  if (
+    intake.budget
+  ) {
+    parts.push(
+      `الميزانية التقريبية: ${intake.budget}`
+    );
+  }
+
+
+  if (
+    intake.hotel_stars
+  ) {
+    parts.push(
+      `تصنيف الفندق المطلوب: ${intake.hotel_stars} نجوم`
+    );
+  }
+
+
+  if (
+    intake.flight_class
+  ) {
+    parts.push(
+      `درجة الطيران: ${intake.flight_class}`
+    );
+  }
+
+
+  if (
+    intake.trip_style
+  ) {
+    parts.push(
+      `نوع الرحلة: ${intake.trip_style}`
+    );
+  }
+
+
+  if (
+    intake.notes
+  ) {
+    parts.push(
+      ''
+    );
+
+
+    parts.push(
+      'طلبات وملاحظات العميل:'
+    );
+
+
+    parts.push(
+      intake.notes
+    );
+  }
+
+
+  return parts.join(
+    '\n'
+  );
+}
+
+
+async function markClientIntakeImported(
+  intakeId
+) {
+  const key =
+    getIntakesAdminKey();
+
+
+  if (
+    !key ||
+    !intakeId
+  ) {
+    return;
+  }
+
+
+  try {
+    await fetch(
+      `${CLIENT_INTAKES_ENDPOINT}/${encodeURIComponent(intakeId)}/imported`,
+      {
+        method:
+          'POST',
+
+        headers: {
+          'X-Admin-Key':
+            key
+        }
+      }
+    );
+  } catch (
+    error
+  ) {
+    console.error(
+      '[Mark Intake Imported]',
+      error
+    );
+  }
+}
+
+async function deleteClientIntake(
+  intake
+) {
+  if (
+    !intake?.id
+  ) {
+    throw new Error(
+      'بيانات الطلب غير صالحة'
+    );
+  }
+
+
+  const key =
+    getIntakesAdminKey();
+
+
+  if (
+    !key
+  ) {
+    throw new Error(
+      'لم يتم إدخال مفتاح الإدارة'
+    );
+  }
+
+
+  const response =
+    await fetch(
+      `${CLIENT_INTAKES_ENDPOINT}/${encodeURIComponent(intake.id)}/delete`,
+      {
+        method:
+          'POST',
+
+        headers: {
+          'X-Admin-Key':
+            key
+        }
+      }
+    );
+
+
+  let result;
+
+
+  try {
+    result =
+      await response.json();
+  } catch {
+    throw new Error(
+      'استجابة الخادم غير صالحة'
+    );
+  }
+
+
+  if (
+    response.status ===
+      401
+  ) {
+    sessionStorage.removeItem(
+      'konooz-intakes-admin-key'
+    );
+
+
+    throw new Error(
+      'مفتاح الإدارة غير صحيح'
+    );
+  }
+
+
+  if (
+    !response.ok
+  ) {
+    throw new Error(
+      result?.error ||
+      'تعذر حذف الطلب'
+    );
+  }
+
+
+  return true;
+}
+async function importClientIntake(
+  intake
+) {
+  if (
+    !intake
+  ) {
+    return;
+  }
+
+
+  startNewOffer(
+    true
+  );
+
+
+  setFormFieldValue(
+    '#clientName',
+    intake.client_name
+  );
+
+
+  setFormFieldValue(
+    '#origin',
+    intake.origin
+  );
+
+
+  setFormFieldValue(
+    '#destination',
+    intake.destination
+  );
+
+
+  setFormFieldValue(
+    '#startDate',
+    intake.start_date
+  );
+
+
+  setFormFieldValue(
+    '#endDate',
+    intake.end_date
+  );
+
+
+  setFormFieldValue(
+    '#adults',
+    intake.adults ??
+    1
+  );
+
+
+  setFormFieldValue(
+    '#children',
+    intake.children ??
+    0
+  );
+
+const importedChildAges =
+  String(
+    intake.child_ages ||
+    ''
+  )
+    .split(',')
+    .map(
+      age =>
+        Number.parseInt(
+          age.trim(),
+          10
+        )
+    )
+    .filter(
+      age =>
+        Number.isFinite(age)
+    );
+
+
+if (
+  Array.isArray(
+    state.childAges
+  )
+) {
+  state.childAges =
+    importedChildAges;
+}
+
+
+if (
+  intake.flight_class
+) {
+  const origin =
+    String(
+      intake.origin ||
+      ''
+    ).trim();
+
+
+  const destination =
+    String(
+      intake.destination ||
+      ''
+    ).trim();
+
+
+  const parsedStartDate =
+  parseFlexibleDate(
+    intake.start_date ||
+    ''
+  );
+
+
+const parsedEndDate =
+  parseFlexibleDate(
+    intake.end_date ||
+    ''
+  );
+
+
+const startDate =
+  parsedStartDate.valid
+    ? parsedStartDate.display
+    : '';
+
+
+const endDate =
+  parsedEndDate.valid
+    ? parsedEndDate.display
+    : '';
+
+
+  const existingFlightIndex =
+    state.services.findIndex(
+      service =>
+        service.category ===
+        'flight'
+    );
+
+
+  const flightService = {
+    id:
+      `service-${Date.now()}-${Math.random()
+        .toString(36)
+        .slice(2, 7)}`,
+
+    category:
+      'flight',
+
+    name:
+  'تذاكر الطيران الدولي',
+
+details:
+  String(
+    intake.flight_class ||
+    ''
+  )
+    .trim()
+    .replace(
+      /^درجة\s+/,
+      ''
+    )
+    ? `درجة ${String(
+        intake.flight_class
+      )
+        .trim()
+        .replace(
+          /^درجة\s+/,
+          ''
+        )}`
+    : '',
+
+    costMode:
+      'total',
+
+    qty:
+      Math.max(
+        1,
+        Number(
+          intake.adults ||
+          1
+        ) +
+        Number(
+          intake.children ||
+          0
+        )
+      ),
+
+    cost:
+      0,
+
+    segments: [
+      createSegment(
+        origin,
+        destination,
+        startDate,
+        '',
+        '',
+        '',
+        0,
+        ''
+      ),
+
+      createSegment(
+        destination,
+        origin,
+        endDate,
+        '',
+        '',
+        '',
+        0,
+        ''
+      )
+    ]
+  };
+
+
+  if (
+    existingFlightIndex >=
+      0
+  ) {
+    state.services[
+      existingFlightIndex
+    ] =
+      flightService;
+  } else {
+    state.services.push(
+      flightService
+    );
+  }
+}
+
+
+  if (
+  intake.hotel_stars
+) {
+  const hotelStarsField =
+    $('#hotelStars');
+
+
+  if (
+    hotelStarsField
+  ) {
+    const wanted =
+      String(
+        intake.hotel_stars
+      )
+        .trim();
+
+
+    const matchingOption =
+      [
+        ...hotelStarsField.options
+      ]
+        .find(
+          option =>
+            String(
+              option.value
+            )
+              .trim() ===
+              wanted ||
+            String(
+              option.textContent
+            )
+              .trim()
+              .includes(
+                wanted
+              )
+        );
+
+
+    if (
+      matchingOption
+    ) {
+      hotelStarsField.value =
+        matchingOption.value;
+
+
+      hotelStarsField.dispatchEvent(
+        new Event(
+          'change',
+          {
+            bubbles:
+              true
+          }
+        )
+      );
+    }
+  }
+}
+  const notes =
+    buildIntakeNotes(
+      intake
+    );
+
+
+  const notesField =
+  $('#internalNotes');
+
+
+  if (
+    notesField &&
+    notes
+  ) {
+    notesField.value =
+      notes;
+
+
+    notesField.dispatchEvent(
+      new Event(
+        'input',
+        {
+          bubbles:
+            true
+        }
+      )
+    );
+  }
+
+
+  if (
+  typeof renderAll ===
+    'function'
+) {
+  renderAll();
+}
+
+
+  if (
+    typeof updateActiveOfferStatus ===
+      'function'
+  ) {
+    updateActiveOfferStatus();
+  }
+
+
+  if (
+    typeof saveDraft ===
+      'function'
+  ) {
+    saveDraft(
+      true
+    );
+  }
+
+
+  await markClientIntakeImported(
+    intake.id
+  );
+
+
+  $('#clientIntakesDialog')
+    ?.close();
+
+
+  if (
+    typeof toast ===
+      'function'
+  ) {
+    toast(
+      'تم استيراد طلب العميل إلى عرض جديد'
+    );
+  }
+}
+
+
+$('#clientIntakesList')
+  ?.addEventListener(
+    'click',
+    async event => {
+      const button =
+        event.target.closest(
+          '.import-client-intake-btn'
+        );
+function confirmClientIntakeDelete(
+  intake
+) {
+  return new Promise(
+    resolve => {
+      const oldDialog =
+        document.querySelector(
+          '#deleteClientIntakeConfirmDialog'
+        );
+
+
+      oldDialog?.remove();
+
+
+      const clientName =
+        String(
+          intake?.client_name ||
+          'هذا العميل'
+        ).trim();
+
+
+      const code =
+        String(
+          intake?.public_code ||
+          ''
+        ).trim();
+
+
+      const dialog =
+        document.createElement(
+          'dialog'
+        );
+
+
+      dialog.id =
+        'deleteClientIntakeConfirmDialog';
+
+
+      dialog.style.cssText = `
+        width: min(440px, calc(100% - 30px));
+        padding: 0;
+        border: 0;
+        border-radius: 18px;
+        background: transparent;
+      `;
+
+
+      dialog.innerHTML = `
+        <div
+          style="
+            padding: 24px;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 25px 70px rgba(0,0,0,.20);
+            text-align: right;
+          "
+        >
+
+          <h3
+            style="
+              margin: 0 0 10px;
+              color: #173f36;
+              font-size: 18px;
+            "
+          >
+            حذف طلب العميل
+          </h3>
+
+
+          <p
+            style="
+              margin: 0;
+              color: #667a74;
+              line-height: 1.9;
+              font-size: 13px;
+            "
+          >
+            هل أنت متأكد من حذف طلب
+            <strong>
+              ${escapeHtml(clientName)}
+            </strong>
+
+            ${
+              code
+                ? `
+                  <br>
+                  <span
+                    style="
+                      color: #b78a32;
+                      font-weight: 800;
+                    "
+                  >
+                    ${escapeHtml(code)}
+                  </span>
+                `
+                : ''
+            }
+            ؟
+          </p>
+
+
+          <p
+            style="
+              margin: 10px 0 0;
+              color: #a74848;
+              font-size: 11px;
+              font-weight: 800;
+            "
+          >
+            لا يمكن التراجع عن الحذف.
+          </p>
+
+
+          <div
+            style="
+              margin-top: 20px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px;
+            "
+          >
+
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-cancel-intake-delete
+            >
+              إلغاء
+            </button>
+
+
+            <button
+              type="button"
+              class="btn"
+              data-confirm-intake-delete
+              style="
+                color: #fff;
+                background: #a74848;
+              "
+            >
+              حذف الطلب
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+
+      document.body.appendChild(
+        dialog
+      );
+
+
+      let finished =
+        false;
+
+
+      function finish(
+        result
+      ) {
+        if (
+          finished
+        ) {
+          return;
+        }
+
+
+        finished =
+          true;
+
+
+        if (
+          dialog.open
+        ) {
+          dialog.close();
+        }
+
+
+        dialog.remove();
+
+
+        resolve(
+          result
+        );
+      }
+
+
+      dialog
+        .querySelector(
+          '[data-cancel-intake-delete]'
+        )
+        ?.addEventListener(
+          'click',
+          () => {
+            finish(
+              false
+            );
+          },
+          {
+            once:
+              true
+          }
+        );
+
+
+      dialog
+        .querySelector(
+          '[data-confirm-intake-delete]'
+        )
+        ?.addEventListener(
+          'click',
+          () => {
+            finish(
+              true
+            );
+          },
+          {
+            once:
+              true
+          }
+        );
+
+
+      dialog.addEventListener(
+        'cancel',
+        event => {
+          event.preventDefault();
+
+
+          finish(
+            false
+          );
+        },
+        {
+          once:
+            true
+        }
+      );
+
+
+      dialog.showModal();
+    }
+  );
+}
+
+
+$('#clientIntakesList')
+  ?.addEventListener(
+    'click',
+    async event => {
+      const button =
+        event.target.closest(
+          '.delete-client-intake-btn'
+        );
+
+
+      if (
+        !button
+      ) {
+        return;
+      }
+
+
+      event.preventDefault();
+      event.stopImmediatePropagation();
+
+
+      const intakeId =
+        button.dataset.intakeId;
+
+
+      const intake =
+        currentClientIntakes.find(
+          item =>
+            String(
+              item.id
+            ) ===
+            String(
+              intakeId
+            )
+        );
+
+
+      if (
+        !intake
+      ) {
+        setClientIntakesStatus(
+          'تعذر العثور على بيانات الطلب',
+          'error'
+        );
+
+
+        return;
+      }
+
+
+      const confirmed =
+        await confirmClientIntakeDelete(
+          intake
+        );
+
+
+      if (
+        !confirmed
+      ) {
+        return;
+      }
+
+
+      const originalText =
+        button.textContent;
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        'جاري الحذف...';
+
+
+      try {
+        await deleteClientIntake(
+          intake
+        );
+
+
+        await loadClientIntakes(
+          $('#clientIntakesSearch')
+            ?.value ||
+          ''
+        );
+
+
+        toast(
+          'تم حذف طلب العميل'
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          '[Delete Client Intake]',
+          error
+        );
+
+
+        button.disabled =
+          false;
+
+
+        button.textContent =
+          originalText;
+
+
+        setClientIntakesStatus(
+          error?.message ||
+          'تعذر حذف الطلب',
+          'error'
+        );
+      }
+    }
+  );
+
+      if (
+        !button
+      ) {
+        return;
+      }
+
+
+      const intakeId =
+        button.dataset.intakeId;
+
+
+      const intake =
+        currentClientIntakes.find(
+          item =>
+            String(
+              item.id
+            ) ===
+            String(
+              intakeId
+            )
+        );
+
+
+      if (
+        !intake
+      ) {
+        setClientIntakesStatus(
+          'تعذر العثور على بيانات الطلب',
+          'error'
+        );
+
+
+        return;
+      }
+
+
+      button.disabled =
+        true;
+
+
+      button.textContent =
+        'جاري الاستيراد...';
+
+
+      try {
+        await importClientIntake(
+          intake
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          '[Import Client Intake]',
+          error
+        );
+
+
+        button.disabled =
+          false;
+
+
+        button.textContent =
+          'استيراد إلى عرض جديد';
+
+
+        setClientIntakesStatus(
+          'تعذر استيراد الطلب',
+          'error'
+        );
+      }
+    }
+  );
   /* =========================================================
      WINDOW
      ========================================================= */
@@ -14405,5 +16476,15 @@ $('#importOfferForm')
       );
     }
   );
-
+$('#openClientIntakeBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      window.open(
+        './intake.html',
+        '_blank',
+        'noopener'
+      );
+    }
+  );
 })();
