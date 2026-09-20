@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+
+<html lang="ar" dir="rtl">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
+
+  <title>
+    طلب رحلة | كنوز السفر
+  </title>
+
+  <link
+    rel="icon"
+    href="./assets/logo.png"
+    type="image/png"
+  >
+
+  <link
+    rel="stylesheet"
+    href="./intake.css"
+  >
+
+</head>
+
+<body>
+
+  <main class="intake-page">
+
+    <section class="intake-card">
+
+      <header class="intake-header">
+
+        <img
+          src="./assets/logo.png"
+          alt="كنوز السفر"
+          class="intake-logo"
+        >
+
+        <div>
+
+          <span>
+            كنوز السفر
+          </span>
+
+          <h1>
+            صمم رحلتك
+          </h1>
+
+          <p>
+            ارسل لنا تفاصيل رحلتك وسنتولى إعداد العرض المناسب لك.
+          </p>
+
+        </div>
+
+      </header>
+
+
+      <form id="clientIntakeForm">
+
+        <div class="intake-grid">
+
+          <label>
+            <span>
+              الاسم *
+            </span>
+
+            <input
+              id="clientName"
+              required
+              autocomplete="name"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              رقم الجوال *
+            </span>
+
+            <input
+              id="phone"
+              required
+              inputmode="tel"
+              dir="ltr"
+              autocomplete="tel"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              البريد الإلكتروني
+            </span>
+
+            <input
+              id="email"
+              type="email"
+              dir="ltr"
+              autocomplete="email"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              مدينة المغادرة
+            </span>
+
+            <input
+              id="origin"
+              placeholder="جدة"
+            >
+          </label>
+
+
+          <label class="intake-wide">
+            <span>
+              الوجهة
+            </span>
+
+            <input
+              id="destination"
+              placeholder="ماليزيا"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              تاريخ السفر
+            </span>
+
+            <input
+              id="startDate"
+              type="date"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              تاريخ العودة
+            </span>
+
+            <input
+              id="endDate"
+              type="date"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              البالغون
+            </span>
+
+            <input
+              id="adults"
+              type="number"
+              min="1"
+              max="50"
+              value="2"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              الأطفال
+            </span>
+
+            <input
+              id="children"
+              type="number"
+              min="0"
+              max="50"
+              value="0"
+            >
+          </label>
+          
+          <div
+  id="childAgesWrap"
+  class="intake-wide"
+  hidden
+>
+  <div
+    id="childAgesFields"
+    class="child-ages-fields"
+  ></div>
+</div>
+
+
+          <label>
+            <span>
+              ميزانية تقريبية
+            </span>
+
+            <input
+              id="budget"
+              placeholder="مثال: 15,000 ريال"
+            >
+          </label>
+
+
+          <label>
+            <span>
+              تصنيف الفندق
+            </span>
+
+            <select id="hotelStars">
+
+              <option value="">
+                غير محدد
+              </option>
+
+              <option value="3">
+                3 نجوم
+              </option>
+
+              <option value="4">
+                4 نجوم
+              </option>
+
+              <option value="5">
+                5 نجوم
+              </option>
+
+              <option value="4-5">
+                4 إلى 5 نجوم
+              </option>
+
+            </select>
+          </label>
+
+
+          <label>
+            <span>
+              درجة الطيران
+            </span>
+
+            <select id="flightClass">
+
+              <option value="">
+                غير محدد
+              </option>
+
+              <option value="سياحية">
+                سياحية
+              </option>
+
+              <option value="سياحية مميزة">
+                سياحية مميزة
+              </option>
+
+              <option value="أعمال">
+                أعمال
+              </option>
+
+              <option value="أولى">
+                أولى
+              </option>
+
+            </select>
+          </label>
+
+
+          <label>
+            <span>
+              نوع الرحلة
+            </span>
+
+            <select id="tripStyle">
+
+              <option value="">
+                غير محدد
+              </option>
+
+              <option value="عائلية">
+                عائلية
+              </option>
+
+              <option value="شهر عسل">
+                شهر عسل
+              </option>
+
+              <option value="استجمام">
+                استجمام
+              </option>
+
+              <option value="مغامرات">
+                مغامرات
+              </option>
+
+              <option value="عمل">
+                عمل
+              </option>
+
+            </select>
+          </label>
+
+
+          <label class="intake-wide">
+            <span>
+              ملاحظات أو طلبات خاصة
+            </span>
+
+            <textarea
+              id="notes"
+              rows="6"
+              placeholder="مثال: أحتاج سيارة خاصة، غرفة مطلة على البحر، أنشطة للأطفال..."
+            ></textarea>
+          </label>
+
+        </div>
+
+
+        <button
+          id="submitIntakeBtn"
+          class="intake-submit"
+          type="submit"
+        >
+          إرسال طلب الرحلة
+        </button>
+
+
+        <p
+          id="intakeStatus"
+          class="intake-status"
+          hidden
+        ></p>
+
+      </form>
+
+    </section>
+
+  </main>
+
+
+  <script
+    src="./intake.js"
+    defer
+  ></script>
+
+</body>
+
+</html>
