@@ -14838,17 +14838,29 @@ ${
             <div class="client-intake-actions">
 
   <button
-    type="button"
-    class="btn btn-primary import-client-intake-btn"
-    data-intake-id="${escapeHtml(item.id || '')}"
-    ${item.status === 'imported' ? 'disabled' : ''}
-  >
-    ${
-      item.status === 'imported'
-        ? 'تم الاستيراد'
-        : 'استيراد إلى عرض جديد'
-    }
-  </button>
+  type="button"
+  class="btn btn-primary import-client-intake-btn ${
+    item.status === 'imported'
+      ? 'is-imported'
+      : ''
+  }"
+  data-intake-id="${escapeHtml(item.id || '')}"
+  data-imported="${item.status === 'imported' ? 'true' : 'false'}"
+>
+  ${
+    item.status === 'imported'
+      ? `
+        <span class="imported-normal-label">
+          تم الاستيراد
+        </span>
+
+        <span class="imported-hover-label">
+          إعادة الاستيراد؟
+        </span>
+      `
+      : 'استيراد إلى عرض جديد'
+  }
+</button>
 
 
   <button
@@ -15872,7 +15884,248 @@ details:
   }
 }
 
+function confirmClientIntakeReimport(
+  intake
+) {
+  return new Promise(
+    resolve => {
+      const oldDialog =
+        document.querySelector(
+          '#reimportClientIntakeConfirmDialog'
+        );
 
+
+      oldDialog?.remove();
+
+
+      const clientName =
+        String(
+          intake?.client_name ||
+          'هذا العميل'
+        ).trim();
+
+
+      const code =
+        String(
+          intake?.public_code ||
+          ''
+        ).trim();
+
+
+      const dialog =
+        document.createElement(
+          'dialog'
+        );
+
+
+      dialog.id =
+        'reimportClientIntakeConfirmDialog';
+
+
+      dialog.style.cssText = `
+        width: min(440px, calc(100% - 30px));
+        padding: 0;
+        border: 0;
+        border-radius: 18px;
+        background: transparent;
+      `;
+
+
+      dialog.innerHTML = `
+        <div
+          style="
+            padding: 24px;
+            border-radius: 18px;
+            background: #fff;
+            box-shadow: 0 25px 70px rgba(0,0,0,.20);
+            text-align: right;
+          "
+        >
+
+          <h3
+            style="
+              margin: 0 0 10px;
+              color: #173f36;
+              font-size: 18px;
+            "
+          >
+            إعادة استيراد الطلب
+          </h3>
+
+
+          <p
+            style="
+              margin: 0;
+              color: #667a74;
+              line-height: 1.9;
+              font-size: 13px;
+            "
+          >
+            هل تريد إعادة استيراد طلب
+            <strong>
+              ${escapeHtml(clientName)}
+            </strong>
+
+            ${
+              code
+                ? `
+                  <br>
+
+                  <span
+                    style="
+                      color: #b78a32;
+                      font-weight: 800;
+                    "
+                  >
+                    ${escapeHtml(code)}
+                  </span>
+                `
+                : ''
+            }
+            ؟
+          </p>
+
+
+          <p
+            style="
+              margin: 10px 0 0;
+              color: #667a74;
+              font-size: 11px;
+              line-height: 1.8;
+            "
+          >
+            سيتم إنشاء عرض جديد مرة أخرى من بيانات هذا الطلب.
+          </p>
+
+
+          <div
+            style="
+              margin-top: 20px;
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 10px;
+            "
+          >
+
+            <button
+              type="button"
+              class="btn btn-ghost"
+              data-cancel-reimport
+            >
+              إلغاء
+            </button>
+
+
+            <button
+              type="button"
+              class="btn btn-primary"
+              data-confirm-reimport
+            >
+              إعادة الاستيراد
+            </button>
+
+          </div>
+
+        </div>
+      `;
+
+
+      document.body.appendChild(
+        dialog
+      );
+
+
+      let finished =
+        false;
+
+
+      function finish(
+        result
+      ) {
+        if (
+          finished
+        ) {
+          return;
+        }
+
+
+        finished =
+          true;
+
+
+        if (
+          dialog.open
+        ) {
+          dialog.close();
+        }
+
+
+        dialog.remove();
+
+
+        resolve(
+          result
+        );
+      }
+
+
+      dialog
+        .querySelector(
+          '[data-cancel-reimport]'
+        )
+        ?.addEventListener(
+          'click',
+          () => {
+            finish(
+              false
+            );
+          },
+          {
+            once:
+              true
+          }
+        );
+
+
+      dialog
+        .querySelector(
+          '[data-confirm-reimport]'
+        )
+        ?.addEventListener(
+          'click',
+          () => {
+            finish(
+              true
+            );
+          },
+          {
+            once:
+              true
+          }
+        );
+
+
+      dialog.addEventListener(
+        'cancel',
+        event => {
+          event.preventDefault();
+
+
+          finish(
+            false
+          );
+        },
+        {
+          once:
+            true
+        }
+      );
+
+
+      dialog.showModal();
+    }
+  );
+}
 $('#clientIntakesList')
   ?.addEventListener(
     'click',
@@ -16279,7 +16532,26 @@ $('#clientIntakesList')
 
         return;
       }
+const alreadyImported =
+  button.dataset.imported ===
+    'true';
 
+
+if (
+  alreadyImported
+) {
+  const confirmed =
+    await confirmClientIntakeReimport(
+      intake
+    );
+
+
+  if (
+    !confirmed
+  ) {
+    return;
+  }
+}
 
       button.disabled =
         true;
