@@ -550,13 +550,31 @@
             </div>
 
 
-            <button
-              class="btn btn-secondary"
-              id="addServiceBtn"
-              type="button"
-            >
-              + إضافة خدمة
-            </button>
+            <div class="services-heading-actions">
+
+  <button
+    class="btn btn-secondary"
+    id="lunaTravelSearchBtn"
+    type="button"
+  >
+      ⌕ بحث 
+  </button>
+<button
+  class="btn btn-secondary"
+  id="openLunaResultsBtn"
+  type="button"
+>
+  استيراد
+</button>
+  <button
+    class="btn btn-secondary"
+    id="addServiceBtn"
+    type="button"
+  >
+    إضافة خدمة
+  </button>
+
+</div>
 
           </div>
 
@@ -1619,14 +1637,51 @@
 
 
           <div
-            class="included-grid"
-            id="clientFlights"
-          ></div>
+  class="included-grid"
+  id="clientFlights"
+></div>
 
-        </section>
+</section>
 
 
-        <!-- HOTELS -->
+<!-- DOMESTIC FLIGHTS -->
+
+<section
+  class="offer-section"
+  id="clientDomesticFlightsSection"
+  hidden
+>
+
+  <div class="offer-section-title">
+
+    <span data-client-section-number>
+      02
+    </span>
+
+    <div>
+
+      <small>
+        الرحلات بين المدن
+      </small>
+
+      <h2>
+        الطيران الداخلي
+      </h2>
+
+    </div>
+
+  </div>
+
+
+  <div
+    class="included-grid"
+    id="clientDomesticFlights"
+  ></div>
+
+</section>
+
+
+<!-- HOTELS -->
 
         <section
           class="offer-section"
@@ -1910,7 +1965,9 @@
             <option value="transfer">
               نقل
             </option>
-
+<option value="airport_service">
+  استقبال وتوديع
+</option>
             <option value="activity">
               نشاط
             </option>
@@ -2257,11 +2314,12 @@
       <div class="dialog-actions">
 
         <button
-          class="btn btn-ghost"
-          value="cancel"
-        >
-          إلغاء
-        </button>
+  class="btn btn-ghost"
+  value="cancel"
+  formnovalidate
+>
+  إلغاء
+</button>
 
 
         <button
@@ -2306,13 +2364,13 @@
 
 
         <button
-          class="icon-btn"
-          id="closeSavedOffersBtn"
-          type="button"
-          aria-label="إغلاق"
-        >
-          ×
-        </button>
+  class="icon-btn"
+  value="cancel"
+  formnovalidate
+  aria-label="إغلاق"
+>
+  ×
+</button>
 
       </div>
 
@@ -2675,6 +2733,196 @@
   </div>
 </dialog>
 
+
+<!-- =====================================================
+     LUNA JSON IMPORT DIALOG
+     ===================================================== -->
+
+<dialog
+  id="lunaJsonDialog"
+  class="luna-json-dialog"
+>
+  <div class="luna-json-card">
+
+    <div class="luna-results-head">
+
+      <div>
+        <strong>
+          استيراد نتائج Luna
+        </strong>
+
+        <span>
+          الصق JSON الذي أعادته Luna
+        </span>
+      </div>
+
+
+      <button
+        id="closeLunaJsonBtn"
+        class="btn btn-secondary"
+        type="button"
+        aria-label="إغلاق"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <label class="luna-results-field">
+
+      <span>
+        JSON
+      </span>
+
+      <textarea
+        id="lunaResultsJson"
+        rows="18"
+        dir="ltr"
+        spellcheck="false"
+        placeholder='{
+  "flights": [...],
+  "hotels": [...]
+}'
+      ></textarea>
+
+    </label>
+
+
+    <p
+      id="lunaResultsStatus"
+      class="luna-results-status"
+      hidden
+    ></p>
+
+
+    <div class="luna-json-actions">
+
+      <button
+        id="analyzeLunaJsonBtn"
+        class="btn btn-primary"
+        type="button"
+      >
+        عرض النتائج
+      </button>
+
+
+      <button
+        id="cancelLunaJsonBtn"
+        class="btn btn-ghost"
+        type="button"
+      >
+        إلغاء
+      </button>
+
+    </div>
+
+  </div>
+</dialog>
+
+
+<!-- =====================================================
+     LUNA RESULTS / SELECTION DIALOG
+     ===================================================== -->
+
+<dialog
+  id="lunaResultsDialog"
+  class="luna-results-dialog"
+>
+  <div class="luna-results-card">
+
+    <div class="luna-results-scroll">
+
+      <div class="luna-results-head">
+
+        <div>
+          <strong>
+            نتائج Luna
+          </strong>
+
+          <span>
+            اختر الطيران والفنادق التي تريد إضافتها للعرض
+          </span>
+        </div>
+
+
+        <button
+          id="closeLunaResultsBtn"
+          class="btn btn-secondary"
+          type="button"
+          aria-label="إغلاق"
+        >
+          ×
+        </button>
+
+      </div>
+
+
+      <div
+        id="lunaResultsTabs"
+        class="luna-results-tabs"
+      >
+
+        <button
+          type="button"
+          class="luna-results-tab is-active"
+          data-luna-tab="international"
+        >
+          الطيران الدولي
+        </button>
+
+
+        <button
+          type="button"
+          class="luna-results-tab"
+          data-luna-tab="domestic"
+        >
+          الطيران الداخلي
+        </button>
+
+
+        <button
+          type="button"
+          class="luna-results-tab"
+          data-luna-tab="hotels"
+        >
+          الفنادق
+        </button>
+
+      </div>
+
+
+      <div
+        id="lunaResultsPreview"
+        class="luna-results-preview"
+      ></div>
+
+    </div>
+
+
+    <div class="luna-results-actions">
+
+      <button
+        id="importLunaResultsBtn"
+        class="btn btn-primary"
+        type="button"
+      >
+        استيراد المختار
+      </button>
+
+
+      <button
+        id="cancelLunaResultsBtn"
+        class="btn btn-ghost"
+        type="button"
+      >
+        إلغاء
+      </button>
+
+    </div>
+
+  </div>
+</dialog>
   <script
   src="https://accounts.google.com/gsi/client"
   async
@@ -2687,7 +2935,7 @@
 ></script>
 
 <script
-  src="./app.js?v=20260915-2"
+  src="./app.js?v=20260930-1"
   defer
 ></script>
 
