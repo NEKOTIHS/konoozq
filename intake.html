@@ -36,27 +36,38 @@
 
       <header class="intake-header">
 
-        <img
-          src="./assets/logo.png"
-          alt="كنوز السفر"
-          class="intake-logo"
-        >
+  <img
+    src="./assets/logo.png"
+    alt="كنوز السفر"
+    class="intake-logo"
+  >
 
-        <div>
+  <div class="intake-header-content">
 
-          <span>
-            كنوز السفر
-          </span>
+    <div class="intake-header-text">
 
-          <h1>
-            صمم رحلتك
-          </h1>
+      <span>
+        كنوز السفر
+      </span>
 
-          <p>
-            ارسل لنا تفاصيل رحلتك وسنتولى إعداد العرض المناسب لك.
-          </p>
+      <h1>
+        صمم رحلتك
+      </h1>
 
-        </div>
+      <p>
+        ارسل لنا تفاصيل رحلتك وسنتولى إعداد العرض المناسب لك.
+      </p>
+
+    </div>
+
+
+    <button
+      id="openImportIntakeBtn"
+      class="intake-import-btn"
+      type="button"
+    >
+      استيراد طلب
+    </button>
 
       </header>
 
@@ -129,6 +140,356 @@
               placeholder="ماليزيا"
             >
           </label>
+          <section
+  class="trip-stops-section intake-wide"
+  id="tripStopsSection"
+>
+
+  <div class="trip-stops-header">
+
+    <div>
+      <span class="trip-stops-title">
+        المدن والإقامات
+      </span>
+
+      <p class="trip-stops-help">
+        أضف المدن بالترتيب وحدد عدد الليالي ووسيلة الانتقال إلى المدينة التالية.
+      </p>
+    </div>
+
+
+    
+  </div>
+
+
+  <div
+  id="tripStopsList"
+  class="trip-stops-list"
+></div>
+
+
+<button
+  id="addTripStopBottomBtn"
+  class="trip-stop-add-btn trip-stop-add-bottom-btn"
+  type="button"
+>
+  + إضافة مدينة جديدة
+</button>
+
+</section>
+
+
+<template id="tripStopTemplate">
+
+  <article
+    class="trip-stop-card"
+    draggable="false"
+  >
+
+    <div class="trip-stop-card-head">
+
+      <div class="trip-stop-card-title">
+
+        <button
+          type="button"
+          class="trip-stop-drag-handle"
+          aria-label="تحريك المدينة"
+          title="اسحب لتغيير ترتيب المدينة"
+        >
+          ⋮⋮
+        </button>
+
+
+        <strong class="trip-stop-number">
+          المدينة 1
+        </strong>
+
+      </div>
+
+
+      <button
+        type="button"
+        class="trip-stop-remove-btn"
+        aria-label="حذف المدينة"
+      >
+        حذف
+      </button>
+
+    </div>
+
+
+    <div class="trip-stop-main-grid">
+
+  <label>
+
+    <span>
+      المدينة
+    </span>
+
+    <input
+      class="trip-stop-city"
+      type="text"
+      placeholder="مثال: جاكرتا"
+    >
+
+  <label>
+
+  <span>
+    نوع المحطة
+  </span>
+
+  <select class="trip-stop-type">
+
+    <option value="stay">
+      إقامة
+    </option>
+
+    <option value="group">
+      مجموعة مناطق فقط
+    </option>
+
+    <option value="pass_through">
+      عبور فقط
+    </option>
+
+  </select>
+
+</label>
+
+
+<label class="trip-stop-nights-wrap">
+
+  <span>
+    عدد الليالي
+  </span>
+
+  <input
+    class="trip-stop-nights"
+    type="number"
+    min="1"
+    max="60"
+    value="2"
+    inputmode="numeric"
+  >
+
+</label>
+
+
+  <label class="trip-stop-transport-wrap">
+
+    <span>
+      الانتقال إلى المحطة التالية
+    </span>
+
+    <select class="trip-stop-transport">
+
+      <option value="best">
+        الأفضل حسب المسافة
+      </option>
+
+      <option value="domestic_flight">
+        طيران داخلي
+      </option>
+
+      <option value="private_car">
+        سيارة خاصة
+      </option>
+
+      <option value="train">
+        قطار
+      </option>
+
+      <option value="ferry">
+        عبّارة
+      </option>
+
+      <option value="boat">
+        قارب
+      </option>
+
+      <option value="shared_transfer">
+        نقل مشترك
+      </option>
+
+      <option value="no_preference">
+        بدون تفضيل
+      </option>
+
+    </select>
+
+  </label>
+
+</div>
+
+
+    <div class="trip-areas-section">
+
+      <div class="trip-areas-head">
+
+        <div>
+
+          <strong>
+            المناطق والإقامات
+          </strong>
+
+          <small>
+            أضف المناطق بالترتيب وحدد الليالي ووسيلة الانتقال.
+          </small>
+
+        </div>
+
+
+        <button
+          type="button"
+          class="trip-area-add-btn"
+        >
+          + إضافة منطقة
+        </button>
+
+      </div>
+
+
+      <div class="trip-areas-list"></div>
+
+    </div>
+
+  </article>
+
+</template>
+
+
+<template id="tripAreaTemplate">
+
+  <div
+    class="trip-area-card"
+    draggable="false"
+  >
+
+    <div class="trip-area-drag">
+
+      <button
+        type="button"
+        class="trip-area-drag-handle"
+        aria-label="تحريك المنطقة"
+        title="اسحب لتغيير ترتيب المنطقة"
+      >
+        ⋮⋮
+      </button>
+
+    </div>
+
+
+    <label>
+
+      <span>
+        المنطقة
+      </span>
+
+      <input
+        class="trip-area-name"
+        type="text"
+        placeholder="مثال: أوبود"
+      >
+
+    </label>
+
+
+    <label>
+
+  <span>
+    نوع المحطة
+  </span>
+
+  <select class="trip-area-stop-type">
+
+    <option value="stay">
+      إقامة
+    </option>
+
+    <option value="pass_through">
+      عبور فقط
+    </option>
+
+  </select>
+
+</label>
+
+
+<label class="trip-area-nights-wrap">
+
+  <span>
+    عدد الليالي
+  </span>
+
+  <input
+    class="trip-area-nights"
+    type="number"
+    min="1"
+    max="60"
+    value="2"
+    inputmode="numeric"
+  >
+
+</label>
+
+
+    <label class="trip-area-transport-wrap">
+
+      <span>
+        الانتقال إلى المحطة التالية
+      </span>
+
+      <select class="trip-area-transport">
+
+        <option value="best">
+          الأفضل حسب المسافة
+        </option>
+
+        <option value="domestic_flight">
+          طيران داخلي
+        </option>
+
+        <option value="private_car">
+          سيارة خاصة
+        </option>
+
+        <option value="train">
+          قطار
+        </option>
+
+        <option value="ferry">
+          عبّارة
+        </option>
+
+        <option value="boat">
+          قارب
+        </option>
+
+        <option value="shared_transfer">
+          نقل مشترك
+        </option>
+
+        <option value="no_preference">
+          بدون تفضيل
+        </option>
+
+      </select>
+
+    </label>
+
+
+    <button
+      type="button"
+      class="trip-area-remove-btn"
+      aria-label="حذف المنطقة"
+      title="حذف المنطقة"
+    >
+      حذف
+    </button>
+
+  </div>
+
+</template>
 
 
           <label>
@@ -340,6 +701,112 @@
     </section>
 
   </main>
+
+
+  <dialog
+  id="importIntakeDialog"
+  class="intake-import-dialog"
+>
+  <div class="intake-import-dialog-card">
+
+    <div class="intake-import-dialog-head">
+
+      <div>
+        <span>
+          طلب سابق
+        </span>
+
+        <h2>
+          استيراد طلب
+        </h2>
+
+        <p>
+          أدخل رقم الطلب لإعادة تحميل بيانات الرحلة.
+        </p>
+      </div>
+
+
+      <button
+        id="closeImportIntakeBtn"
+        class="intake-dialog-close"
+        type="button"
+        aria-label="إغلاق"
+      >
+        ×
+      </button>
+
+    </div>
+
+
+    <div class="intake-import-fields">
+
+  <label class="intake-import-code-field">
+
+    <span>
+      رقم الطلب
+    </span>
+
+    <input
+      id="importIntakeCode"
+      type="text"
+      placeholder="مثال: KT-ABC123"
+      autocomplete="off"
+      dir="ltr"
+    >
+
+  </label>
+
+
+  <label class="intake-import-code-field">
+
+    <span>
+      رقم الجوال المسجل في الطلب
+    </span>
+
+    <input
+      id="importIntakePhone"
+      type="tel"
+      placeholder="05xxxxxxxx"
+      autocomplete="tel"
+      inputmode="tel"
+      dir="ltr"
+    >
+
+  </label>
+
+</div>
+
+
+    <p
+      id="importIntakeStatus"
+      class="intake-import-status"
+      hidden
+    ></p>
+
+
+    <div class="intake-import-dialog-actions">
+
+      <button
+        id="cancelImportIntakeBtn"
+        class="intake-dialog-secondary"
+        type="button"
+      >
+        إلغاء
+      </button>
+
+
+      <button
+        id="loadImportIntakeBtn"
+        class="intake-dialog-primary"
+        type="button"
+      >
+        استيراد الطلب
+      </button>
+
+    </div>
+
+  </div>
+</dialog>
 
 
   <script
