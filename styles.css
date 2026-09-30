@@ -4289,3 +4289,1426 @@ dialog::backdrop {
 .import-client-intake-btn.is-imported:hover .imported-hover-label {
   display: inline;
 }
+.luna-results-dialog {
+  width: min(
+    760px,
+    calc(100% - 24px)
+  );
+
+  max-height: 90vh;
+
+  padding: 0;
+
+  border: 0;
+  border-radius: 20px;
+
+  background: transparent;
+}
+
+.luna-results-dialog::backdrop {
+  background:
+    rgba(8, 28, 24, .55);
+
+  backdrop-filter:
+    blur(3px);
+}
+
+.luna-results-card {
+  max-height: 88vh;
+
+  overflow: auto;
+
+  padding: 24px;
+
+  border:
+    1px solid
+    var(--line);
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 28px 80px
+    rgba(0, 0, 0, .20);
+}
+
+.luna-results-head {
+  margin-bottom: 20px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+.luna-results-head strong {
+  display: block;
+
+  color: var(--green-dark);
+
+  font-size: 20px;
+}
+
+.luna-results-head span {
+  display: block;
+
+  margin-top: 5px;
+
+  color: var(--muted);
+
+  font-size: 11px;
+  line-height: 1.8;
+}
+
+.luna-results-field {
+  display: grid;
+  gap: 8px;
+}
+
+.luna-results-field > span {
+  color: #405752;
+
+  font-size: 11px;
+  font-weight: 900;
+}
+
+#lunaResultsJson {
+  min-height: 340px;
+
+  resize: vertical;
+
+  direction: ltr;
+  text-align: left;
+
+  font-family:
+    Consolas,
+    Monaco,
+    monospace;
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.luna-results-status {
+  margin: 14px 0 0;
+
+  padding: 11px 13px;
+
+  border-radius: 10px;
+
+  color: #46655d;
+  background: #f2f8f6;
+
+  font-size: 12px;
+  line-height: 1.7;
+}
+
+.luna-results-status.is-error {
+  color: #9a3d3d;
+  background: #fff0f0;
+}
+
+.luna-results-status.is-success {
+  color: #155f4d;
+  background: #e7f8f2;
+}
+
+.luna-results-actions {
+  margin-top: 18px;
+
+  display: flex;
+  justify-content: flex-end;
+
+  gap: 8px;
+}
+
+@media (max-width: 640px) {
+  .luna-results-card {
+    padding: 17px;
+  }
+
+  .luna-results-head {
+    flex-direction: column;
+  }
+
+  .luna-results-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .luna-results-actions .btn {
+    width: 100%;
+  }
+}
+.luna-results-preview {
+  margin-top: 18px;
+
+  display: grid;
+  gap: 22px;
+}
+
+.luna-preview-section {
+  display: grid;
+  gap: 10px;
+}
+
+.luna-preview-section h3 {
+  margin: 0;
+
+  color: var(--green-dark);
+
+  font-size: 15px;
+}
+
+.luna-preview-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.luna-result-card {
+  padding: 15px;
+
+  border:
+    1px solid
+    var(--line);
+
+  border-radius: 14px;
+
+  background: #fbfdfc;
+}
+
+.luna-result-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 14px;
+
+  margin-bottom: 12px;
+}
+
+.luna-result-card h4 {
+  margin: 4px 0 0;
+
+  color: #173f36;
+
+  font-size: 14px;
+}
+
+.luna-result-number {
+  color: var(--gold);
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.luna-result-price {
+  color: var(--green);
+
+  white-space: nowrap;
+
+  font-size: 14px;
+}
+
+.luna-result-meta {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap: 7px 14px;
+
+  color: #587069;
+
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.luna-result-meta b,
+.luna-result-note b {
+  color: #284b42;
+}
+
+.luna-segments-list {
+  margin-top: 12px;
+
+  display: grid;
+  gap: 7px;
+}
+
+.luna-segment {
+  padding: 10px;
+
+  display: grid;
+  gap: 3px;
+
+  border-radius: 10px;
+
+  background: #f1f7f5;
+
+  font-size: 11px;
+}
+
+.luna-segment strong {
+  color: var(--green);
+}
+
+.luna-segment small {
+  color: var(--muted);
+}
+
+.luna-result-note {
+  margin-top: 10px;
+
+  color: #60736e;
+
+  font-size: 11px;
+  line-height: 1.7;
+}
+
+.luna-result-source {
+  margin-top: 12px;
+  padding-top: 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  border-top:
+    1px dashed
+    var(--line);
+
+  color: var(--muted);
+
+  font-size: 10px;
+}
+
+.luna-result-source a {
+  color: var(--green);
+
+  text-decoration: none;
+
+  font-weight: 900;
+}
+
+.luna-result-source a:hover {
+  text-decoration: underline;
+}
+
+.luna-result-empty {
+  padding: 20px;
+
+  border:
+    1px dashed
+    var(--line);
+
+  border-radius: 12px;
+
+  color: var(--muted);
+
+  text-align: center;
+
+  font-size: 11px;
+}
+
+.luna-result-muted {
+  color: var(--muted);
+
+  font-size: 11px;
+}
+
+@media (max-width: 640px) {
+  .luna-result-card-head {
+    flex-direction: column;
+  }
+
+  .luna-result-meta {
+    grid-template-columns: 1fr;
+  }
+
+  .luna-result-source {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+.client-intake-route {
+  margin-top: 14px;
+  padding: 14px;
+
+  border: 1px solid #dfe9e5;
+  border-radius: 13px;
+
+  background: #f7fbf9;
+}
+
+.client-intake-route-title {
+  display: block;
+
+  margin-bottom: 12px;
+
+  color: var(--green-dark);
+
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.client-intake-route-list {
+  display: grid;
+  gap: 0;
+}
+
+.client-intake-route-stop {
+  position: relative;
+
+  padding-bottom: 12px;
+}
+
+.client-intake-route-stop:last-child {
+  padding-bottom: 0;
+}
+
+.client-intake-route-city {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    28px
+    minmax(0, 1fr)
+    auto;
+
+  align-items: center;
+
+  gap: 9px;
+}
+
+.client-intake-route-number {
+  width: 28px;
+  height: 28px;
+
+  position: relative;
+  z-index: 2;
+
+  display: grid;
+  place-items: center;
+
+  border-radius: 50%;
+
+  color: #ffffff;
+  background: var(--green);
+
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.client-intake-route-city strong {
+  color: #183f35;
+
+  font-size: 12px;
+}
+
+.client-intake-route-city small {
+  padding: 5px 8px;
+
+  border-radius: 999px;
+
+  color: var(--green);
+  background: var(--green-soft);
+
+  white-space: nowrap;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+.client-intake-route-stop:not(:last-child)::after {
+  content: '';
+
+  width: 2px;
+
+  position: absolute;
+
+  top: 28px;
+  bottom: -1px;
+  right: 13px;
+
+  background: #cfe1dc;
+}
+
+.client-intake-route-transfer {
+  margin:
+    8px
+    37px
+    0
+    0;
+
+  padding: 8px 10px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 10px;
+
+  border-radius: 9px;
+
+  color: #60746e;
+  background: #edf6f3;
+
+  font-size: 10px;
+}
+
+.client-intake-route-transfer strong {
+  color: var(--green);
+
+  font-size: 10px;
+}
+
+@media (max-width: 640px) {
+  .client-intake-route-city {
+    grid-template-columns:
+      28px
+      minmax(0, 1fr);
+  }
+
+  .client-intake-route-city small {
+    grid-column: 2;
+    width: max-content;
+  }
+
+  .client-intake-route-transfer {
+    margin-right: 37px;
+
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+.luna-select-btn {
+  width: 100%;
+  min-height: 40px;
+
+  margin-top: 12px;
+  padding: 0 14px;
+
+  border: 1px solid var(--green);
+  border-radius: 10px;
+
+  color: var(--green);
+  background: #ffffff;
+
+  cursor: pointer;
+
+  font: inherit;
+  font-size: 11px;
+  font-weight: 900;
+
+  transition:
+    background-color .18s ease,
+    color .18s ease,
+    border-color .18s ease;
+}
+
+.luna-select-btn:hover {
+  color: #ffffff;
+  background: var(--green);
+}
+
+.luna-select-btn.is-selected {
+  color: #ffffff;
+  background: var(--green);
+  border-color: var(--green);
+}
+/* =========================================================
+   LUNA RESULTS V2
+   ========================================================= */
+
+.luna-results-dialog {
+  width:
+    min(
+      920px,
+      calc(100% - 24px)
+    );
+
+  max-height:
+    92vh;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 0;
+  border-radius: 20px;
+
+  background: transparent;
+}
+
+
+.luna-results-card {
+  width: 100%;
+
+  height:
+    min(
+      88vh,
+      900px
+    );
+
+  max-height: 88vh;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  display: flex;
+  flex-direction: column;
+
+  border:
+    1px solid
+    var(--line);
+
+  border-radius: 20px;
+
+  background: #ffffff;
+
+  box-shadow:
+    0 28px 80px
+    rgba(0, 0, 0, .20);
+}
+
+
+/* المنطقة الوحيدة التي تتحرك بالسكرول */
+
+.luna-results-scroll {
+  flex: 1;
+  min-height: 0;
+
+  overflow-x: hidden;
+  overflow-y: auto;
+
+  padding: 24px;
+}
+
+
+/* رأس النافذة */
+
+.luna-results-head {
+  margin-bottom: 20px;
+
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+}
+
+
+/* حقل JSON */
+
+#lunaResultsJson {
+  min-height: 240px;
+  max-height: 360px;
+}
+
+
+/* =========================================================
+   TABS
+   ========================================================= */
+
+.luna-results-tabs {
+  position: sticky;
+  top: -24px;
+  z-index: 15;
+
+  margin:
+    18px -24px
+    0;
+
+  padding:
+    12px 24px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  overflow-x: auto;
+
+  border-top:
+    1px solid
+    var(--line);
+
+  border-bottom:
+    1px solid
+    var(--line);
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      .96
+    );
+
+  backdrop-filter:
+    blur(14px);
+}
+
+
+.luna-results-tab {
+  flex: 1;
+
+  min-width: 150px;
+  min-height: 42px;
+
+  padding:
+    9px 14px;
+
+  border:
+    1px solid
+    var(--line);
+
+  border-radius: 11px;
+
+  color:
+    var(--green);
+
+  background:
+    #ffffff;
+
+  cursor: pointer;
+
+  white-space: nowrap;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  transition:
+    color .16s ease,
+    background-color .16s ease,
+    border-color .16s ease,
+    box-shadow .16s ease;
+}
+
+
+.luna-results-tab:hover {
+  border-color:
+    #9ec7bd;
+
+  background:
+    var(--green-soft);
+}
+
+
+.luna-results-tab.is-active {
+  color: #ffffff;
+
+  border-color:
+    var(--green);
+
+  background:
+    var(--green);
+
+  box-shadow:
+    0 7px 18px
+    rgba(
+      11,
+      93,
+      75,
+      .18
+    );
+}
+
+
+/* =========================================================
+   RESULTS
+   ========================================================= */
+
+.luna-results-preview {
+  margin-top: 18px;
+
+  display: grid;
+  gap: 18px;
+}
+
+
+.luna-results-group {
+  display: grid;
+  gap: 12px;
+}
+
+
+.luna-results-group + .luna-results-group {
+  margin-top: 8px;
+}
+
+
+.luna-results-group-head {
+  padding:
+    10px 13px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 12px;
+
+  border-radius: 11px;
+
+  color:
+    var(--green-dark);
+
+  background:
+    #f0f7f5;
+}
+
+
+.luna-results-group-head strong {
+  font-size: 12px;
+}
+
+
+.luna-results-group-head span {
+  color:
+    var(--muted);
+
+  font-size: 10px;
+}
+
+
+.luna-options-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      2,
+      minmax(0, 1fr)
+    );
+
+  gap: 12px;
+}
+
+
+/* اقتصادي */
+
+.luna-result-card[data-option-type="economy"] {
+  border-color:
+    #cce2db;
+}
+
+
+.luna-result-card[data-option-type="economy"]
+.luna-option-badge {
+  color:
+    #17624f;
+
+  background:
+    #e6f5f0;
+}
+
+
+/* ممتاز */
+
+.luna-result-card[data-option-type="premium"] {
+  border-color:
+    #e4d09f;
+
+  background:
+    #fffdf7;
+}
+
+
+.luna-result-card[data-option-type="premium"]
+.luna-option-badge {
+  color:
+    #89651f;
+
+  background:
+    #f8edcf;
+}
+
+
+.luna-option-badge {
+  width: fit-content;
+
+  margin-bottom: 5px;
+
+  padding:
+    5px 8px;
+
+  border-radius:
+    999px;
+
+  font-size: 9px;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   FIXED ACTIONS
+   ========================================================= */
+
+.luna-results-actions {
+  flex: 0 0 auto;
+
+  margin: 0;
+
+  padding:
+    14px 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  border-top:
+    1px solid
+    var(--line);
+
+  background:
+    rgba(
+      255,
+      255,
+      255,
+      .98
+    );
+
+  box-shadow:
+    0 -10px 30px
+    rgba(
+      5,
+      55,
+      47,
+      .06
+    );
+
+  backdrop-filter:
+    blur(14px);
+}
+
+
+.luna-results-actions
+#importLunaResultsBtn {
+  min-width: 190px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 700px) {
+
+  .luna-results-dialog {
+    width:
+      calc(
+        100% - 14px
+      );
+  }
+
+
+  .luna-results-card {
+    height: 92vh;
+    max-height: 92vh;
+
+    border-radius: 16px;
+  }
+
+
+  .luna-results-scroll {
+    padding: 16px;
+  }
+
+
+  .luna-results-head {
+    flex-direction: row;
+  }
+
+
+  .luna-results-tabs {
+    top: -16px;
+
+    margin:
+      16px -16px
+      0;
+
+    padding:
+      10px 16px;
+  }
+
+
+  .luna-results-tab {
+    flex: 0 0 auto;
+
+    min-width: 125px;
+  }
+
+
+  .luna-options-grid {
+    grid-template-columns:
+      1fr;
+  }
+
+
+  .luna-results-actions {
+    padding:
+      12px 16px;
+
+    display: grid;
+
+    grid-template-columns:
+      1fr 1fr;
+  }
+
+
+  .luna-results-actions
+  #importLunaResultsBtn {
+    min-width: 0;
+  }
+
+
+  .luna-results-actions
+  .btn {
+    width: 100%;
+  }
+
+}
+/* =========================================================
+   LUNA JSON DIALOG
+   ========================================================= */
+
+.luna-json-dialog {
+  width:
+    min(
+      700px,
+      calc(100% - 30px)
+    );
+
+  max-width: 700px;
+  max-height: 86vh;
+
+  padding: 0;
+
+  overflow: hidden;
+
+  border: 0;
+  border-radius: 20px;
+
+  background: transparent;
+
+  direction: rtl;
+}
+
+
+.luna-json-dialog::backdrop {
+  background:
+    rgba(
+      8,
+      28,
+      24,
+      .55
+    );
+
+  backdrop-filter:
+    blur(3px);
+}
+
+
+.luna-json-card {
+  width: 100%;
+
+  max-height: 86vh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  border:
+    1px solid
+    var(--line);
+
+  border-radius: 20px;
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 28px 80px
+    rgba(
+      0,
+      0,
+      0,
+      .20
+    );
+}
+
+
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.luna-json-dialog
+.luna-results-head {
+  flex: 0 0 auto;
+
+  margin: 0;
+
+  padding:
+    22px
+    22px
+    16px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 16px;
+
+  border-bottom:
+    1px solid
+    var(--line);
+}
+
+
+.luna-json-dialog
+.luna-results-head strong {
+  font-size: 19px;
+}
+
+
+.luna-json-dialog
+.luna-results-head span {
+  margin-top: 4px;
+}
+
+
+/* =========================================================
+   JSON FIELD
+   ========================================================= */
+
+.luna-json-dialog
+.luna-results-field {
+  flex: 1;
+  min-height: 0;
+
+  padding:
+    16px
+    22px;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+
+.luna-json-dialog
+#lunaResultsJson {
+  width: 100%;
+
+  height: 330px;
+  min-height: 330px;
+  max-height: 330px;
+
+  padding: 14px;
+
+  resize: none;
+
+  overflow: auto;
+
+  border:
+    1px solid
+    var(--line);
+
+  border-radius: 12px;
+
+  direction: ltr;
+  text-align: left;
+
+  background:
+    #fbfdfc;
+
+  font-family:
+    Consolas,
+    Monaco,
+    monospace;
+
+  font-size: 11px;
+  line-height: 1.65;
+}
+
+
+/* =========================================================
+   STATUS
+   ========================================================= */
+
+.luna-json-dialog
+.luna-results-status {
+  flex: 0 0 auto;
+
+  margin:
+    0
+    22px
+    14px;
+}
+
+
+/* =========================================================
+   ACTIONS
+   ========================================================= */
+
+.luna-json-actions {
+  flex: 0 0 auto;
+
+  padding:
+    14px
+    22px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  border-top:
+    1px solid
+    var(--line);
+
+  background:
+    #ffffff;
+
+  box-shadow:
+    0 -8px 24px
+    rgba(
+      5,
+      55,
+      47,
+      .05
+    );
+}
+
+
+.luna-json-actions
+#analyzeLunaJsonBtn {
+  min-width: 150px;
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (
+  max-width: 640px
+) {
+
+  .luna-json-dialog {
+    width:
+      calc(
+        100% - 16px
+      );
+
+    max-height: 92vh;
+  }
+
+
+  .luna-json-card {
+    max-height: 92vh;
+
+    border-radius: 16px;
+  }
+
+
+  .luna-json-dialog
+  .luna-results-head {
+    padding:
+      16px
+      16px
+      13px;
+
+    flex-direction: row;
+  }
+
+
+  .luna-json-dialog
+  .luna-results-field {
+    padding:
+      14px
+      16px;
+  }
+
+
+  .luna-json-dialog
+  #lunaResultsJson {
+    height: 300px;
+    min-height: 300px;
+    max-height: 300px;
+  }
+
+
+  .luna-json-dialog
+  .luna-results-status {
+    margin:
+      0
+      16px
+      12px;
+  }
+
+
+  .luna-json-actions {
+    padding:
+      12px
+      16px;
+
+    display: grid;
+
+    grid-template-columns:
+      1fr
+      1fr;
+  }
+
+
+  .luna-json-actions
+  #analyzeLunaJsonBtn {
+    min-width: 0;
+  }
+
+
+  .luna-json-actions
+  .btn {
+    width: 100%;
+  }
+
+}
+.luna-hotel-price-wrap {
+  display: grid;
+  justify-items: end;
+  gap: 3px;
+}
+
+
+.luna-hotel-tax {
+  color: var(--muted);
+
+  font-size: 9px;
+  font-weight: 400;
+  line-height: 1.4;
+
+  white-space: nowrap;
+}
+.luna-flight-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+}
+#clientHotels .hotel-client-item .client-detail-list {
+  display: grid;
+
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+
+  gap:
+    7px
+    18px;
+}
+
+
+#clientHotels .hotel-client-item .client-detail-list > div {
+  min-width: 0;
+
+  display: flex;
+  align-items: baseline;
+
+  gap: 5px;
+}
+
+
+#clientHotels .hotel-client-item .client-detail-list dt {
+  flex: 0 0 auto;
+
+  color: var(--muted);
+
+  font-size: 9px;
+  font-weight: 700;
+}
+
+
+#clientHotels .hotel-client-item .client-detail-list dd {
+  min-width: 0;
+
+  margin: 0;
+
+  color: var(--ink);
+
+  font-size: 9px;
+  font-weight: 900;
+
+  direction: ltr;
+  text-align: right;
+
+  overflow-wrap: anywhere;
+}
+@media (max-width: 640px) {
+  #clientHotels .hotel-client-item .client-detail-list {
+    grid-template-columns: 1fr;
+  }
+}
+.hotel-source-url-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+
+.hotel-source-url-control input {
+  flex: 1;
+  min-width: 0;
+}
+
+
+.open-hotel-source-btn {
+  height: 38px;
+  min-width: 58px;
+
+  padding: 0 14px;
+
+  border: 1px solid var(--green);
+  border-radius: 10px;
+
+  color: var(--green);
+  background: var(--green-soft);
+
+  cursor: pointer;
+
+  font-size: 11px;
+  font-weight: 900;
+
+  transition:
+    background-color .16s ease,
+    color .16s ease,
+    transform .16s ease,
+    box-shadow .16s ease;
+}
+
+
+.open-hotel-source-btn:hover {
+  color: #fff;
+  background: var(--green);
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 5px 14px
+    rgba(11, 93, 75, .16);
+}
+
+
+.open-hotel-source-btn:active {
+  transform: translateY(0);
+}
