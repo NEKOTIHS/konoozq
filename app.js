@@ -12,6 +12,15 @@
   const CLIENT_INTAKES_ENDPOINT =
   'https://konoozagent.khaledsan201031.workers.dev/intakes';
   let currentClientIntakes = [];
+  let pendingLunaResults =
+  null;
+  const selectedLunaResults = {
+  flights:
+    new Set(),
+
+  hotels:
+    new Set()
+};
   let clientIntakesSearchTimer =
   null;
 
@@ -1632,6 +1641,15 @@
     }
 
 
+    if (
+  !Array.isArray(
+    state.tripStops
+  )
+) {
+  state.tripStops =
+    [];
+}
+
     state.copy = {
       ...structuredClone(
         defaultCopy
@@ -2360,6 +2378,66 @@ image.alt =
           </label>
 
           <label>
+  تصنيف الفندق
+
+  <input
+    data-field="hotelStars"
+    type="text"
+    value="${escapeHtml(
+      item.hotelStars ||
+      ''
+    )}"
+    placeholder="مثال: 5 نجوم"
+  >
+</label>
+
+
+<label>
+  مساحة الغرفة
+
+  <input
+    data-field="roomSize"
+    type="text"
+    value="${escapeHtml(
+      item.roomSize ||
+      ''
+    )}"
+    placeholder="مثال: 36 m²"
+    dir="ltr"
+  >
+</label>
+
+
+<label>
+  الوجبات
+
+  <input
+    data-field="board"
+    type="text"
+    value="${escapeHtml(
+      item.board ||
+      ''
+    )}"
+    placeholder="مثال: إفطار شامل"
+  >
+</label>
+
+
+<label>
+  سياسة الإلغاء
+
+  <input
+    data-field="cancellation"
+    type="text"
+    value="${escapeHtml(
+      item.cancellation ||
+      ''
+    )}"
+    placeholder="مثال: غير قابل للاسترداد"
+  >
+</label>
+
+          <label>
             تاريخ الدخول
 
             <input
@@ -2430,6 +2508,33 @@ image.alt =
               value="${Math.max(0, toNumber(item.hotelTax))}"
             >
           </label>
+<label class="hotel-source-url-field">
+  رابط الفندق
+
+  <div class="hotel-source-url-control">
+
+    <input
+      data-field="sourceUrl"
+      type="url"
+      value="${escapeHtml(
+        item.sourceUrl ||
+        ''
+      )}"
+      placeholder="https://..."
+      dir="ltr"
+      autocomplete="off"
+    >
+
+    <button
+      class="open-hotel-source-btn"
+      type="button"
+      title="فتح رابط الفندق"
+    >
+      فتح
+    </button>
+
+  </div>
+</label>
 
         </div>
       `;
@@ -2437,11 +2542,58 @@ image.alt =
 
 
     if (
-      item.category ===
-      'flight'
-    ) {
-      return `
-        <div class="service-dates flight-segments">
+  item.category ===
+  'flight'
+) {
+  const flightType =
+    String(
+      item?.flightType ||
+      'international'
+    )
+      .trim()
+      .toLowerCase();
+
+
+  return `
+    <div class="service-dates flight-segments">
+
+      <div class="flight-type-field">
+
+        <label>
+          نوع الطيران
+
+          <select data-field="flightType">
+
+            <option
+              value="international"
+              ${
+                flightType ===
+                  'international'
+                  ? 'selected'
+                  : ''
+              }
+            >
+              طيران دولي
+            </option>
+
+
+            <option
+              value="domestic"
+              ${
+                flightType ===
+                  'domestic'
+                  ? 'selected'
+                  : ''
+              }
+            >
+              طيران داخلي
+            </option>
+
+          </select>
+
+        </label>
+
+      </div>
 
           <div class="flight-segments-head">
 
@@ -2809,76 +2961,394 @@ image.alt =
   function hotelCityGroupsHtml(
   items
 ) {
-  return state.hotelCities
-    .map(
-      (
-        city,
-        cityIndex
-      ) => {
-        const hotels =
-          items.filter(
-            item =>
-              item.city ===
-              city
+  const allTripStops =
+  Array.isArray(
+    state.tripStops
+  )
+    ? state.tripStops
+        .map(
+          (
+            stop,
+            index
+          ) => ({
+            ...stop,
+
+            tripStopIndex:
+              index
+          })
+        )
+        .filter(
+          stop =>
+            String(
+              stop?.city ||
+              ''
+            ).trim()
+        )
+    : [];
+
+
+/*
+ * نحفظ أرقام محطات العبور الأصلية.
+ * هذه الأرقام لا تتغير حتى يظل tripStopIndex
+ * متطابقًا مع Luna والمسار الكامل.
+ */
+const passThroughIndexes =
+  new Set(
+    allTripStops
+      .filter(
+        stop => {
+          const stopType =
+            stop?.stopType ===
+              'pass_through'
+              ? 'pass_through'
+              : 'stay';
+
+
+          const parsedNights =
+            Number.parseInt(
+              stop?.nights,
+              10
+            );
+
+
+          return (
+            stopType ===
+              'pass_through' ||
+            (
+              Number.isFinite(
+                parsedNights
+              ) &&
+              parsedNights <= 0
+            )
+          );
+        }
+      )
+      .map(
+        stop =>
+          stop.tripStopIndex
+      )
+  );
+
+
+/*
+ * قسم الفنادق يعرض محطات الإقامة فقط.
+ * محطة العبور تبقى في state.tripStops
+ * ولكنها لا تظهر هنا.
+ */
+const tripStops =
+  allTripStops.filter(
+    stop =>
+      !passThroughIndexes.has(
+        stop.tripStopIndex
+      )
+  );
+
+
+  /*
+   * العروض القديمة أو العروض التي لم تأت من
+   * نموذج المدن المتعددة تستمر بنفس النظام القديم.
+   */
+  if (
+  !allTripStops.length
+) {
+    return state.hotelCities
+      .map(
+        (
+          city,
+          cityIndex
+        ) => {
+          const hotels =
+            items.filter(
+              item =>
+                item.city ===
+                city
+            );
+
+
+          return `
+            <section
+              class="hotel-city-group"
+              data-city="${escapeHtml(city)}"
+            >
+
+              <div class="hotel-city-head">
+
+                <label class="hotel-city-name-field">
+
+                  المدينة
+
+                  <input
+                    class="city-name-input"
+                    data-city-index="${cityIndex}"
+                    type="text"
+                    value="${escapeHtml(city)}"
+                  >
+
+                </label>
+
+                <button
+                  class="delete-hotel-city-btn"
+                  type="button"
+                  data-city="${escapeHtml(city)}"
+                  aria-label="حذف المدينة"
+                  title="حذف المدينة"
+                >
+                  حذف
+                </button>
+
+              </div>
+
+
+              <div class="hotel-city-list">
+
+                ${
+                  hotels.length
+                    ? hotels
+                        .map(
+                          serviceRow
+                        )
+                        .join('')
+                    : `
+                      <p class="city-empty">
+                        لا توجد فنادق في هذه المدينة.
+                      </p>
+                    `
+                }
+
+              </div>
+
+            </section>
+          `;
+        }
+      )
+      .join('');
+  }
+
+
+  /*
+   * في الرحلات متعددة المدن:
+   * التجميع يكون حسب رقم الإقامة وليس اسم المدينة.
+   *
+   * لذلك بانكوك الأولى تختلف عن بانكوك الأخيرة.
+   */
+  const usedHotelIds =
+    new Set();
+
+
+  const routeGroupsHtml =
+    tripStops
+      .map(
+        stop => {
+          const tripStopIndex =
+            stop.tripStopIndex;
+
+
+          const city =
+            String(
+              stop.city ||
+              ''
+            ).trim();
+
+
+          const nights =
+            Math.max(
+              1,
+              Number.parseInt(
+                stop.nights,
+                10
+              ) ||
+              1
+            );
+
+
+          const hotels =
+            items.filter(
+              item =>
+                Number.parseInt(
+                  item.tripStopIndex,
+                  10
+                ) ===
+                  tripStopIndex
+            );
+
+
+          hotels.forEach(
+            hotel => {
+              usedHotelIds.add(
+                hotel.id
+              );
+            }
           );
 
 
-        return `
-          <section
-            class="hotel-city-group"
-            data-city="${escapeHtml(city)}"
-          >
+          return `
+            <section
+              class="hotel-city-group"
+              data-trip-stop-index="${tripStopIndex}"
+              data-city="${escapeHtml(city)}"
+            >
 
-            <div class="hotel-city-head">
+              <div class="hotel-city-head">
 
-              <label class="hotel-city-name-field">
+                <label class="hotel-city-name-field">
 
-                المدينة
+                  الإقامة ${tripStopIndex + 1}
+                  |
+                  ${
+                    nights === 1
+                      ? 'ليلة واحدة'
+                      : `${nights} ليال`
+                  }
 
-                <input
-                  class="city-name-input"
-                  data-city-index="${cityIndex}"
-                  type="text"
-                  value="${escapeHtml(city)}"
-                >
+                  <input
+                    type="text"
+                    value="${escapeHtml(city)}"
+                    readonly
+                  >
 
-              </label>
+                </label>
 
-              <button
-                class="delete-hotel-city-btn"
-                type="button"
-                data-city="${escapeHtml(city)}"
-                aria-label="حذف المدينة"
-                title="حذف المدينة"
-              >
-                حذف
-              </button>
+              </div>
 
-            </div>
 
-            <div class="hotel-city-list">
+              <div class="hotel-city-list">
 
-              ${
-                hotels.length
-                  ? hotels
-                      .map(
-                        serviceRow
-                      )
-                      .join('')
-                  : `
-                    <p class="city-empty">
-                      لا توجد فنادق في هذه المدينة.
-                    </p>
-                  `
-              }
+                ${
+                  hotels.length
+                    ? hotels
+                        .map(
+                          serviceRow
+                        )
+                        .join('')
+                    : `
+                      <p class="city-empty">
+                        لا توجد فنادق في هذه الإقامة.
+                      </p>
+                    `
+                }
 
-            </div>
+              </div>
 
-          </section>
-        `;
+            </section>
+          `;
+        }
+      )
+      .join('');
+
+
+  /*
+   * نحافظ كذلك على أي فنادق أضيفت يدويًا
+   * وليست مرتبطة بمحطة من مسار العميل.
+   */
+  const remainingHotels =
+  items.filter(
+    item => {
+      const itemTripStopIndex =
+        Number.parseInt(
+          item?.tripStopIndex,
+          10
+        );
+
+
+      /*
+       * حتى لو بقي فندق قديم مرتبط بمحطة عبور،
+       * لا نعرضه كمدينة إضافية.
+       */
+      if (
+        Number.isFinite(
+          itemTripStopIndex
+        ) &&
+        passThroughIndexes.has(
+          itemTripStopIndex
+        )
+      ) {
+        return false;
       }
-    )
-    .join('');
+
+
+      return !usedHotelIds.has(
+        item.id
+      );
+    }
+  );
+
+
+  const remainingCities =
+    [
+      ...new Set(
+        remainingHotels
+          .map(
+            item =>
+              String(
+                item.city ||
+                ''
+              ).trim()
+          )
+          .filter(
+            Boolean
+          )
+      )
+    ];
+
+
+  const manualGroupsHtml =
+    remainingCities
+      .map(
+        city => {
+          const hotels =
+            remainingHotels.filter(
+              item =>
+                item.city ===
+                  city
+            );
+
+
+          return `
+            <section
+              class="hotel-city-group"
+              data-city="${escapeHtml(city)}"
+            >
+
+              <div class="hotel-city-head">
+
+                <label class="hotel-city-name-field">
+
+                  مدينة إضافية
+
+                  <input
+                    type="text"
+                    value="${escapeHtml(city)}"
+                    readonly
+                  >
+
+                </label>
+
+              </div>
+
+
+              <div class="hotel-city-list">
+
+                ${
+                  hotels
+                    .map(
+                      serviceRow
+                    )
+                    .join('')
+                }
+
+              </div>
+
+            </section>
+          `;
+        }
+      )
+      .join('');
+
+
+  return (
+    routeGroupsHtml +
+    manualGroupsHtml
+  );
 }
 
 function deleteHotelCity(
@@ -3037,10 +3507,25 @@ function deleteHotelCity(
                     </span>
 
                     <strong>
-                      ${escapeHtml(categoryLabel(group.key))}
-                    </strong>
+  ${escapeHtml(categoryLabel(group.key))}
+</strong>
 
-                  </div>
+
+${
+  group.key !== 'flight' &&
+  group.key !== 'hotel'
+    ? `
+      <button
+        class="btn btn-ghost quick-add-transfer-btn"
+        type="button"
+      >
+        + إضافة نقل
+      </button>
+    `
+    : ''
+}
+
+</div>
 
                   ${
                     group.key ===
@@ -3564,113 +4049,304 @@ function deleteHotelCity(
      ========================================================= */
 
   function detailRows(
-    rows
-  ) {
-    return `
-      <dl class="client-detail-list">
-
-        ${
-          rows
-            .map(
-              (
-                [
-                  label,
-                  value
-                ]
-              ) => `
-                <div>
-
-                  <dt>
-                    ${escapeHtml(label)}:
-                  </dt>
-
-                  <dd>
-                    ${escapeHtml(value || 'غير محدد')}
-                  </dd>
-
-                </div>
-              `
-            )
-            .join('')
+  rows
+) {
+  const visibleRows =
+    rows.filter(
+      (
+        [
+          label,
+          value
+        ]
+      ) => {
+        if (
+          value === null ||
+          value === undefined
+        ) {
+          return false;
         }
 
-      </dl>
-    `;
+
+        const text =
+          String(
+            value
+          ).trim();
+
+
+        if (
+          !text
+        ) {
+          return false;
+        }
+
+
+        const hiddenValues =
+          [
+            'غير محدد',
+            'غير محددة',
+            'null',
+            'undefined',
+            'nan'
+          ];
+
+
+        return !hiddenValues.includes(
+          text.toLowerCase()
+        );
+      }
+    );
+
+
+  if (
+    !visibleRows.length
+  ) {
+    return '';
   }
+
+
+  return `
+    <dl class="client-detail-list">
+
+      ${
+        visibleRows
+          .map(
+            (
+              [
+                label,
+                value
+              ]
+            ) => `
+              <div>
+
+                <dt>
+                  ${escapeHtml(
+                    label
+                  )}:
+                </dt>
+
+                <dd>
+                  ${escapeHtml(
+                    value
+                  )}
+                </dd>
+
+              </div>
+            `
+          )
+          .join('')
+      }
+
+    </dl>
+  `;
+}
 
 
   function hotelClientItem(
-    item
-  ) {
-    return `
-      <div class="included-item hotel-client-item">
+  item
+) {
+  const roomType =
+    String(
+      item?.details ||
+      ''
+    ).trim();
 
-        <span class="included-icon">
-          ${categories.hotel.icon}
-        </span>
 
-        <div>
+  const city =
+    String(
+      item?.city ||
+      ''
+    ).trim();
 
-          <strong>
-            ${escapeHtml(item.name)}
-          </strong>
 
-          <small>
-            نوع الغرفة:
-            ${escapeHtml(item.details || 'غير محدد')}
-          </small>
+  const rawHotelStars =
+    String(
+      item?.hotelStars ||
+      ''
+    ).trim();
 
-          ${
-            detailRows([
-              [
-                'تاريخ الدخول',
 
-                clientDateTime(
-                  formatFlexibleClientDate(
-                    item.checkIn
-                  ),
+  const hotelStars =
+    rawHotelStars
+      ? (
+          /نجوم?/i.test(
+            rawHotelStars
+          )
+            ? rawHotelStars
+            : `${rawHotelStars} نجوم`
+        )
+      : '';
 
-                  item.checkInTime
-                )
-              ],
 
-              [
-                'تاريخ الخروج',
+  const roomSize =
+    String(
+      item?.roomSize ||
+      ''
+    ).trim();
 
-                clientDateTime(
-                  formatFlexibleClientDate(
-                    item.checkOut
-                  ),
 
-                  item.checkOutTime
-                )
-              ],
+  const board =
+    String(
+      item?.board ||
+      ''
+    ).trim();
 
-              [
-                'عدد الليالي',
 
-                englishNumber.format(
-                  hotelNights(
-                    item
-                  )
-                )
-              ],
+  const cancellation =
+    String(
+      item?.cancellation ||
+      ''
+    ).trim();
 
-              [
-                'عدد الأشخاص',
 
-                englishNumber.format(
-                  item.qty
-                )
-              ]
-            ])
-          }
+  const checkIn =
+    String(
+      item?.checkIn ||
+      ''
+    ).trim();
 
-        </div>
+
+  const checkOut =
+    String(
+      item?.checkOut ||
+      ''
+    ).trim();
+
+
+  const checkInTime =
+    String(
+      item?.checkInTime ||
+      ''
+    ).trim();
+
+
+  const checkOutTime =
+    String(
+      item?.checkOutTime ||
+      ''
+    ).trim();
+
+
+  const qty =
+    Number(
+      item?.qty
+    );
+
+
+  const rows = [
+    [
+      'المدينة',
+      city
+    ],
+
+    [
+      'نوع الغرفة',
+      roomType
+    ],
+
+    [
+      'التصنيف',
+      hotelStars
+    ],
+
+    [
+      'المساحة',
+      roomSize
+    ],
+
+    [
+      'الوجبات',
+      board
+    ],
+
+    [
+      'سياسة الإلغاء',
+      cancellation
+    ],
+
+    [
+      'تاريخ الدخول',
+
+      checkIn
+        ? clientDateTime(
+            formatFlexibleClientDate(
+              checkIn
+            ),
+            checkInTime
+          )
+        : ''
+    ],
+
+    [
+      'تاريخ الخروج',
+
+      checkOut
+        ? clientDateTime(
+            formatFlexibleClientDate(
+              checkOut
+            ),
+            checkOutTime
+          )
+        : ''
+    ],
+
+    [
+      'عدد الأشخاص',
+
+      Number.isFinite(
+        qty
+      ) &&
+      qty > 0
+        ? englishNumber.format(
+            qty
+          )
+        : ''
+    ]
+  ]
+    .filter(
+      (
+        [
+          label,
+          value
+        ]
+      ) =>
+        String(
+          value ||
+          ''
+        ).trim()
+    );
+
+
+  return `
+    <div class="included-item hotel-client-item">
+
+      <span class="included-icon">
+        ${categories.hotel.icon}
+      </span>
+
+
+      <div>
+
+        <strong>
+          ${escapeHtml(
+            item?.name ||
+            'فندق'
+          )}
+        </strong>
+
+
+        ${
+          rows.length
+            ? detailRows(
+                rows
+              )
+            : ''
+        }
 
       </div>
-    `;
-  }
+
+    </div>
+  `;
+}
 
 
   function flightClientItem(
@@ -3774,14 +4450,68 @@ function deleteHotelCity(
 
 
   function serviceClientItems(
-    category
-  ) {
+  category,
+  flightType = ''
+) {
     const items =
-      state.services.filter(
-        item =>
-          item.category ===
-          category
-      );
+  state.services.filter(
+    item => {
+      if (
+        item.category !==
+        category
+      ) {
+        return false;
+      }
+
+
+      if (
+        category !==
+          'flight' ||
+        !flightType
+      ) {
+        return true;
+      }
+
+
+      const itemFlightType =
+        String(
+          item?.flightType ||
+          ''
+        )
+          .trim()
+          .toLowerCase();
+
+
+      /*
+       * الرحلات القديمة التي لا تحتوي flightType
+       * نعتبرها دولية حتى لا تختفي من العرض.
+       */
+      if (
+        flightType ===
+          'international'
+      ) {
+        return (
+          !itemFlightType ||
+          itemFlightType ===
+            'international'
+        );
+      }
+
+
+      if (
+        flightType ===
+          'domestic'
+      ) {
+        return (
+          itemFlightType ===
+          'domestic'
+        );
+      }
+
+
+      return true;
+    }
+  );
 
 
     if (
@@ -3873,12 +4603,13 @@ function deleteHotelCity(
      ========================================================= */
 function updateClientSectionNumbers() {
   const sectionIds = [
-    'clientFlightsSection',
-    'clientHotelsSection',
-    'clientTransfersSection',
-    'clientActivitiesSection',
-    'clientItinerarySection'
-  ];
+  'clientFlightsSection',
+  'clientDomesticFlightsSection',
+  'clientHotelsSection',
+  'clientTransfersSection',
+  'clientActivitiesSection',
+  'clientItinerarySection'
+];
 
 
   let visibleNumber =
@@ -4109,80 +4840,94 @@ function updateClientSectionNumbers() {
 
 
     const sections = [
-      [
-        'flight',
-        'clientFlights',
-        'clientFlightsSection',
-        'showFlights'
-      ],
+  [
+    'flight',
+    'clientFlights',
+    'clientFlightsSection',
+    'showFlights',
+    'international'
+  ],
 
-      [
-        'hotel',
-        'clientHotels',
-        'clientHotelsSection',
-        'showHotels'
-      ],
+  [
+    'flight',
+    'clientDomesticFlights',
+    'clientDomesticFlightsSection',
+    'showFlights',
+    'domestic'
+  ],
 
-      [
-        'transfer',
-        'clientTransfers',
-        'clientTransfersSection',
-        'showTransfers'
-      ],
+  [
+    'hotel',
+    'clientHotels',
+    'clientHotelsSection',
+    'showHotels',
+    ''
+  ],
 
-      [
-        'activity',
-        'clientActivities',
-        'clientActivitiesSection',
-        'showActivities'
-      ]
-    ];
+  [
+    'transfer',
+    'clientTransfers',
+    'clientTransfersSection',
+    'showTransfers',
+    ''
+  ],
 
-
-    sections.forEach(
-      (
-        [
-          category,
-          contentId,
-          sectionId,
-          toggleId
-        ]
-      ) => {
-        const html =
-          serviceClientItems(
-            category
-          );
+  [
+    'activity',
+    'clientActivities',
+    'clientActivitiesSection',
+    'showActivities',
+    ''
+  ]
+];
 
 
-        const content =
-          $(`#${contentId}`);
+sections.forEach(
+  (
+    [
+      category,
+      contentId,
+      sectionId,
+      toggleId,
+      flightType
+    ]
+  ) => {
+    const html =
+      serviceClientItems(
+        category,
+        flightType
+      );
 
 
-        const section =
-          $(`#${sectionId}`);
+    const content =
+      $(`#${contentId}`);
 
 
-        const toggle =
-          $(`#${toggleId}`);
+    const section =
+      $(`#${sectionId}`);
 
 
-        if (
-          content
-        ) {
-          content.innerHTML =
-            html;
-        }
+    const toggle =
+      $(`#${toggleId}`);
 
 
-        if (
-          section
-        ) {
-          section.hidden =
-            !toggle?.checked ||
-            !html;
-        }
-      }
-    );
+    if (
+      content
+    ) {
+      content.innerHTML =
+        html;
+    }
+
+
+    if (
+      section
+    ) {
+      section.hidden =
+        !toggle?.checked ||
+        !html;
+    }
+  }
+);
 
 
     const itinerary =
@@ -4636,146 +5381,302 @@ updateClientSectionNumbers();
 
 
   function updateNewServiceScheduleFields() {
-    const categoryElement =
-      $('#newServiceCategory');
+  const categoryElement =
+    $('#newServiceCategory');
 
 
-    if (
-      !categoryElement
-    ) {
-      return;
-    }
-
-
-    const category =
-      categoryElement.value;
-
-
-    const flightDates =
-      $('#newFlightDates');
-
-
-    const hotelDates =
-      $('#newHotelDates');
-const flightTypeWrap =
-  $('#newFlightTypeWrap');
-
-
-if (
-  flightTypeWrap
-) {
-  flightTypeWrap.hidden =
-    category !==
-      'flight';
-}
-
-    if (
-      flightDates
-    ) {
-      flightDates.hidden =
-        category !==
-        'flight';
-    }
-
-
-    if (
-      hotelDates
-    ) {
-      hotelDates.hidden =
-        category !==
-        'hotel';
-    }
-
-
-    const detailsLabel =
-      $('#newServiceDetailsLabel');
-
-
-    const detailsInput =
-      $('#newServiceDetails');
-
-
-    const qtyLabel =
-      $('#newServiceQtyLabel');
-
-
-    if (
-      category ===
-      'hotel'
-    ) {
-      if (
-        detailsLabel
-      ) {
-        detailsLabel.textContent =
-          'نوع الغرفة';
-      }
-
-
-      if (
-        detailsInput
-      ) {
-        detailsInput.placeholder =
-          'مثال: غرفة ديلوكس مطلة على البحر';
-      }
-
-
-      if (
-        qtyLabel
-      ) {
-        qtyLabel.textContent =
-          'عدد الأشخاص';
-      }
-    } else if (
-      category ===
-      'flight'
-    ) {
-      if (
-        detailsLabel
-      ) {
-        detailsLabel.textContent =
-          'درجة الطيران';
-      }
-
-
-      if (
-        detailsInput
-      ) {
-        detailsInput.placeholder =
-          'مثال: سياحي، سياحي مميز، أعمال، أولى';
-      }
-
-
-      if (
-        qtyLabel
-      ) {
-        qtyLabel.textContent =
-          'الكمية';
-      }
-    } else {
-      if (
-        detailsLabel
-      ) {
-        detailsLabel.textContent =
-          'التفاصيل';
-      }
-
-
-      if (
-        detailsInput
-      ) {
-        detailsInput.placeholder =
-          'اكتب تفاصيل الخدمة';
-      }
-
-
-      if (
-        qtyLabel
-      ) {
-        qtyLabel.textContent =
-          'الكمية';
-      }
-    }
+  if (
+    !categoryElement
+  ) {
+    return;
   }
+
+
+  const category =
+    categoryElement.value;
+
+
+  const flightDates =
+    $('#newFlightDates');
+
+
+  const hotelDates =
+    $('#newHotelDates');
+
+
+  const flightTypeWrap =
+    $('#newFlightTypeWrap');
+
+
+  const nameInput =
+    $('#newServiceName');
+
+
+  const detailsLabel =
+    $('#newServiceDetailsLabel');
+
+
+  const detailsInput =
+    $('#newServiceDetails');
+
+
+  const qtyLabel =
+    $('#newServiceQtyLabel');
+
+
+  if (
+    flightTypeWrap
+  ) {
+    flightTypeWrap.hidden =
+      category !==
+      'flight';
+  }
+
+
+  if (
+    flightDates
+  ) {
+    flightDates.hidden =
+      category !==
+      'flight';
+  }
+
+
+  if (
+    hotelDates
+  ) {
+    hotelDates.hidden =
+      category !==
+      'hotel';
+  }
+
+
+  if (
+    category ===
+      'flight'
+  ) {
+    if (
+      detailsLabel
+    ) {
+      detailsLabel.textContent =
+        'درجة الطيران';
+    }
+
+
+    if (
+      detailsInput
+    ) {
+      detailsInput.placeholder =
+        'مثال: Economy أو Business';
+    }
+
+
+    if (
+      qtyLabel
+    ) {
+      qtyLabel.textContent =
+        'عدد المسافرين';
+    }
+
+
+    updateNewFlightType();
+
+
+    return;
+  }
+
+
+  if (
+    category ===
+      'hotel'
+  ) {
+    if (
+      nameInput
+    ) {
+      nameInput.value =
+        '';
+    }
+
+
+    if (
+      detailsLabel
+    ) {
+      detailsLabel.textContent =
+        'نوع الغرفة';
+    }
+
+
+    if (
+      detailsInput
+    ) {
+      detailsInput.placeholder =
+        'مثال: Deluxe King Room';
+    }
+
+
+    if (
+      qtyLabel
+    ) {
+      qtyLabel.textContent =
+        'عدد الأشخاص';
+    }
+
+
+    return;
+  }
+
+
+  if (
+    category ===
+      'transfer'
+  ) {
+    if (
+      nameInput
+    ) {
+      nameInput.value =
+        'خدمة نقل';
+    }
+
+
+    if (
+      detailsLabel
+    ) {
+      detailsLabel.textContent =
+        'وسيلة النقل';
+    }
+
+
+    if (
+      detailsInput
+    ) {
+      detailsInput.placeholder =
+        'مثال: سيارة خاصة أو فان أو قارب';
+    }
+
+
+    if (
+      qtyLabel
+    ) {
+      qtyLabel.textContent =
+        'عدد المركبات';
+    }
+
+
+    return;
+  }
+
+
+  if (
+    category ===
+      'airport_service'
+  ) {
+    if (
+      nameInput
+    ) {
+      nameInput.value =
+        'استقبال وتوديع المطار';
+    }
+
+
+    if (
+      detailsLabel
+    ) {
+      detailsLabel.textContent =
+        'مسار الاستقبال والتوديع';
+    }
+
+
+    if (
+      detailsInput
+    ) {
+      detailsInput.placeholder =
+        'مثال: مطار بالي → فندق أوبود';
+    }
+
+
+    if (
+      qtyLabel
+    ) {
+      qtyLabel.textContent =
+        'عدد المركبات';
+    }
+
+
+    return;
+  }
+
+
+  if (
+    category ===
+      'activity'
+  ) {
+    if (
+      nameInput
+    ) {
+      nameInput.value =
+        '';
+    }
+
+
+    if (
+      detailsLabel
+    ) {
+      detailsLabel.textContent =
+        'تفاصيل النشاط';
+    }
+
+
+    if (
+      detailsInput
+    ) {
+      detailsInput.placeholder =
+        'مثال: جولة خاصة مع مرشد';
+    }
+
+
+    if (
+      qtyLabel
+    ) {
+      qtyLabel.textContent =
+        'عدد الأشخاص';
+    }
+
+
+    return;
+  }
+
+
+  if (
+    nameInput
+  ) {
+    nameInput.value =
+      '';
+  }
+
+
+  if (
+    detailsLabel
+  ) {
+    detailsLabel.textContent =
+      'التفاصيل';
+  }
+
+
+  if (
+    detailsInput
+  ) {
+    detailsInput.placeholder =
+      'اكتب تفاصيل الخدمة';
+  }
+
+
+  if (
+    qtyLabel
+  ) {
+    qtyLabel.textContent =
+      'الكمية';
+  }
+}
 function updateNewFlightType() {
   const category =
     $('#newServiceCategory')
@@ -4883,6 +5784,107 @@ if (
 
   const servicesList =
     $('#servicesList');
+    servicesList
+  ?.addEventListener(
+    'click',
+
+    event => {
+      const button =
+        event.target.closest(
+          '.open-hotel-source-btn'
+        );
+
+
+      if (
+        !button
+      ) {
+        return;
+      }
+
+
+      event.preventDefault();
+
+
+      const row =
+        button.closest(
+          '.service-row'
+        );
+
+
+      const input =
+        row?.querySelector(
+          'input[data-field="sourceUrl"]'
+        );
+
+
+      const rawUrl =
+        String(
+          input?.value ||
+          ''
+        ).trim();
+
+
+      if (
+        !rawUrl
+      ) {
+        toast(
+          'لا يوجد رابط للفندق'
+        );
+
+
+        return;
+      }
+
+
+      let url =
+        rawUrl;
+
+
+      if (
+        !/^https?:\/\//i.test(
+          url
+        )
+      ) {
+        url =
+          `https://${url}`;
+      }
+
+
+      try {
+        const parsedUrl =
+          new URL(
+            url
+          );
+
+
+        if (
+          ![
+            'http:',
+            'https:'
+          ].includes(
+            parsedUrl.protocol
+          )
+        ) {
+          throw new Error(
+            'Invalid protocol'
+          );
+        }
+
+
+        window.open(
+          parsedUrl.href,
+          '_blank',
+          'noopener,noreferrer'
+        );
+      } catch (
+        error
+      ) {
+        toast(
+          'رابط الفندق غير صالح'
+        );
+      }
+    }
+  );
 servicesList
   ?.addEventListener(
     'click',
@@ -4966,7 +5968,7 @@ if (
   ) {
     const confirmed =
       window.confirm(
-        `يوجد ${hotelsInCity.length} فندق في ${city}. هل تريد حذف المدينة وجميع فنادقها؟`
+        `يوجد ${hotelsInCity.length} فندق في ${city}. هل تريد حذف  data-field="city" وجميع فنادقها؟`
       );
 
 
@@ -6019,14 +7021,32 @@ if (
 
 
   servicesList
-    ?.addEventListener(
-      'click',
+  ?.addEventListener(
+    'click',
 
-      event => {
-        const row =
-          event.target.closest(
-            '.service-row'
-          );
+    event => {
+      const quickTransferButton =
+        event.target.closest(
+          '.quick-add-transfer-btn'
+        );
+
+
+      if (
+        quickTransferButton
+      ) {
+        openServiceDialog(
+          'transfer'
+        );
+
+
+        return;
+      }
+
+
+      const row =
+        event.target.closest(
+          '.service-row'
+        );
 
 
         if (
@@ -6316,57 +7336,84 @@ $('#newFlightType')
         event.preventDefault();
 
 
-        const category =
-          $('#newServiceCategory')
-            ?.value ||
-          'transfer';
+        const selectedCategory =
+  $('#newServiceCategory')
+    ?.value ||
+  'transfer';
 
 
-        const item = {
-          id:
-            `service-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-
-          category,
-
-          name:
-            $('#newServiceName')
-              ?.value
-              .trim() ||
-            '',
-
-          details:
-            $('#newServiceDetails')
-              ?.value
-              .trim() ||
-            '',
-
-          costMode:
-            $('#newServiceCostMode')
-              ?.value ||
-            'total',
-
-          qty:
-            Math.max(
-              1,
-              toNumber(
-                $('#newServiceQty')?.value,
-                1
-              )
-            ),
-
-          cost:
-            Math.max(
-              0,
-              toNumber(
-                $('#newServiceCost')?.value
-              )
-            )
-        };
+const category =
+  selectedCategory ===
+    'airport_service'
+    ? 'transfer'
+    : selectedCategory;
 
 
-        if (
-          !item.name
-        ) {
+const item = {
+  id:
+    `service-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 7)}`,
+
+    category,
+
+  serviceType:
+    selectedCategory ===
+      'airport_service'
+      ? 'airport_service'
+      : '',
+
+  name:
+    $('#newServiceName')
+      ?.value
+      .trim() ||
+    '',
+
+  details:
+    $('#newServiceDetails')
+      ?.value
+      .trim() ||
+    '',
+
+  costMode:
+    $('#newServiceCostMode')
+      ?.value ||
+    'total',
+
+  qty:
+    Math.max(
+      1,
+      toNumber(
+        $('#newServiceQty')?.value,
+        1
+      )
+    ),
+
+  cost:
+    Math.max(
+      0,
+      toNumber(
+        $('#newServiceCost')?.value
+      )
+    ),
+
+  flightType:
+    category ===
+      'flight'
+      ? (
+          $('#newFlightType')
+            ?.value ===
+            'domestic'
+            ? 'domestic'
+            : 'international'
+        )
+      : ''
+};
+
+
+if (
+  !item.name
+) {
           toast(
             'اكتب اسم الخدمة'
           );
@@ -8609,17 +9656,20 @@ $('#newFlightType')
 
 
     state = {
-      services:
-        [],
+  services:
+    [],
 
-      itinerary:
-        [],
+  itinerary:
+    [],
 
-      childAges:
-        [],
+  childAges:
+    [],
 
-      hotelCities:
-        [],
+  tripStops:
+    [],
+
+  hotelCities:
+    [],
 
       copy: {
         ...structuredClone(
@@ -13657,48 +14707,59 @@ function importedServiceToState(
 
 
   const item = {
-    id:
-      `service-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+  id:
+    `service-${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2, 7)}`,
 
-    category,
+  category,
 
-    name:
-      String(
-        service?.name ||
-        categoryLabel(
-          category
-        )
-      ).trim(),
+  name:
+    $('#newServiceName')
+      ?.value
+      .trim() ||
+    '',
 
-    details:
-      String(
-        service?.details ||
-        ''
-      ).trim(),
+  details:
+    $('#newServiceDetails')
+      ?.value
+      .trim() ||
+    '',
 
-    costMode:
-      service?.costMode ===
-      'unit'
-        ? 'unit'
-        : 'total',
+  costMode:
+    $('#newServiceCostMode')
+      ?.value ||
+    'total',
 
-    qty:
-      Math.max(
-        1,
-        toNumber(
-          service?.qty,
-          1
-        )
-      ),
-
-    cost:
-      Math.max(
-        0,
-        toNumber(
-          service?.cost
-        )
+  qty:
+    Math.max(
+      1,
+      toNumber(
+        $('#newServiceQty')?.value,
+        1
       )
-  };
+    ),
+
+  cost:
+    Math.max(
+      0,
+      toNumber(
+        $('#newServiceCost')?.value
+      )
+    ),
+
+  flightType:
+    category ===
+      'flight'
+      ? (
+          $('#newFlightType')
+            ?.value ===
+            'domestic'
+            ? 'domestic'
+            : 'international'
+        )
+      : ''
+};
 
 
   if (
@@ -14549,6 +15610,426 @@ function intakeValue(
 }
 
 
+function parseIntakeTripStops(
+  value
+) {
+  if (
+    Array.isArray(
+      value
+    )
+  ) {
+    return value;
+  }
+
+
+  if (
+    !value
+  ) {
+    return [];
+  }
+
+
+  try {
+    const parsed =
+      JSON.parse(
+        value
+      );
+
+
+    return Array.isArray(
+      parsed
+    )
+      ? parsed
+      : [];
+  } catch (
+    error
+  ) {
+    console.warn(
+      '[Trip Stops]',
+      error
+    );
+
+
+    return [];
+  }
+}
+
+
+function intakeTransportLabel(
+  value
+) {
+  const labels = {
+    best:
+      'الأفضل حسب المسافة',
+
+    domestic_flight:
+      'طيران داخلي',
+
+    private_car:
+      'سيارة خاصة',
+
+    train:
+      'قطار',
+
+    ferry:
+      'عبّارة',
+
+    no_preference:
+      'بدون تفضيل'
+  };
+
+
+  return labels[
+    value
+  ] ||
+  'غير محدد';
+}
+
+
+function renderIntakeTripStops(
+  item
+) {
+  const cityGroups =
+    parseIntakeTripStops(
+      item?.trip_stops
+    )
+      .filter(
+        stop =>
+          String(
+            stop?.city ||
+            ''
+          ).trim()
+      );
+
+
+  if (
+    !cityGroups.length
+  ) {
+    return '';
+  }
+
+
+  /*
+   * نحول المدن + المناطق إلى مسار واحد
+   * مرتب كما أدخله العميل.
+   */
+  const routeStops =
+    [];
+
+
+  cityGroups.forEach(
+    (
+      stop,
+      cityIndex
+    ) => {
+      const city =
+        String(
+          stop?.city ||
+          ''
+        ).trim();
+
+
+      if (
+        !city
+      ) {
+        return;
+      }
+
+
+      const areas =
+        Array.isArray(
+          stop?.areas
+        )
+          ? stop.areas
+          : [];
+
+
+      const cityStopType =
+        stop?.stopType ===
+          'pass_through'
+          ? 'pass_through'
+          : 'stay';
+
+
+      const parsedCityNights =
+        Number.parseInt(
+          stop?.nights,
+          10
+        );
+
+
+      /*
+       * إذا كانت المدينة تحتوي مناطق
+       * ولم يكن لها عدد ليالٍ فعلي،
+       * نعاملها كمجموعة فقط ولا نظهرها
+       * كإقامة مستقلة.
+       */
+      const cityNights =
+        Number.isFinite(
+          parsedCityNights
+        )
+          ? Math.max(
+              0,
+              parsedCityNights
+            )
+          : (
+              areas.length
+                ? 0
+                : 1
+            );
+
+
+      const shouldIncludeCity =
+        cityStopType ===
+          'pass_through' ||
+        cityNights > 0;
+
+
+      if (
+        shouldIncludeCity
+      ) {
+        routeStops.push({
+          name:
+            city,
+
+          parentCity:
+            '',
+
+          stopType:
+            cityStopType,
+
+          nights:
+            cityStopType ===
+              'pass_through'
+              ? 0
+              : cityNights,
+
+          transportToNext:
+            String(
+              stop
+                ?.transportToNext ||
+              'best'
+            ).trim(),
+
+          cityIndex,
+
+          areaIndex:
+            -1
+        });
+      }
+
+
+      areas.forEach(
+        (
+          areaItem,
+          areaIndex
+        ) => {
+          const area =
+            String(
+              areaItem?.area ||
+              areaItem?.name ||
+              ''
+            ).trim();
+
+
+          if (
+            !area
+          ) {
+            return;
+          }
+
+
+          const stopType =
+            areaItem?.stopType ===
+              'pass_through'
+              ? 'pass_through'
+              : 'stay';
+
+
+          const parsedAreaNights =
+            Number.parseInt(
+              areaItem?.nights,
+              10
+            );
+
+
+          const areaNights =
+            stopType ===
+              'pass_through'
+              ? 0
+              : (
+                  Number.isFinite(
+                    parsedAreaNights
+                  )
+                    ? Math.max(
+                        1,
+                        parsedAreaNights
+                      )
+                    : 1
+                );
+
+
+          routeStops.push({
+            name:
+              area,
+
+            parentCity:
+              city,
+
+            stopType,
+
+            nights:
+              areaNights,
+
+            transportToNext:
+              String(
+                areaItem
+                  ?.transportToNext ||
+                areaItem
+                  ?.transport ||
+                'best'
+              ).trim(),
+
+            cityIndex,
+
+            areaIndex
+          });
+        }
+      );
+    }
+  );
+
+
+  if (
+    !routeStops.length
+  ) {
+    return '';
+  }
+
+
+  return `
+    <div class="client-intake-route">
+
+      <strong class="client-intake-route-title">
+        مسار الرحلة
+      </strong>
+
+
+      <div class="client-intake-route-list">
+
+        ${routeStops
+          .map(
+            (
+              stop,
+              index
+            ) => {
+              const nextStop =
+                routeStops[
+                  index + 1
+                ];
+
+
+              const displayName =
+                stop.parentCity &&
+                stop.parentCity !==
+                  stop.name
+                  ? `${stop.name} - ${stop.parentCity}`
+                  : stop.name;
+
+
+              const nextDisplayName =
+                nextStop
+                  ? (
+                      nextStop.parentCity &&
+                      nextStop.parentCity !==
+                        nextStop.name
+                        ? `${nextStop.name} - ${nextStop.parentCity}`
+                        : nextStop.name
+                    )
+                  : '';
+
+
+              const isPassThrough =
+                stop.stopType ===
+                  'pass_through';
+
+
+              const nightsLabel =
+                isPassThrough
+                  ? 'عبور فقط'
+                  : `${
+                      stop.nights
+                    } ${
+                      Number(
+                        stop.nights
+                      ) === 1
+                        ? 'ليلة'
+                        : 'ليال'
+                    }`;
+
+
+              return `
+                <div class="client-intake-route-stop">
+
+                  <div class="client-intake-route-city">
+
+                    <span class="client-intake-route-number">
+                      ${index + 1}
+                    </span>
+
+                    <strong>
+                      ${escapeHtml(
+                        displayName
+                      )}
+                    </strong>
+
+                    <small>
+                      ${escapeHtml(
+                        nightsLabel
+                      )}
+                    </small>
+
+                  </div>
+
+
+                  ${
+                    nextStop
+                      ? `
+                        <div class="client-intake-route-transfer">
+
+                          <span>
+                            الانتقال إلى
+                            ${escapeHtml(
+                              nextDisplayName
+                            )}
+                          </span>
+
+                          <strong>
+                            ${escapeHtml(
+                              intakeTransportLabel(
+                                stop.transportToNext
+                              )
+                            )}
+                          </strong>
+
+                        </div>
+                      `
+                      : ''
+                  }
+
+                </div>
+              `;
+            }
+          )
+          .join('')}
+
+      </div>
+
+    </div>
+  `;
+}
+
+
 function renderClientIntakes(
   items
 ) {
@@ -14821,6 +16302,9 @@ ${
 </div>
             </div>
 
+                        ${renderIntakeTripStops(
+              item
+            )}
 
             ${
               item.notes
@@ -15521,6 +17005,574 @@ async function deleteClientIntake(
 
   return true;
 }
+
+function tripStopTransitionDate(
+  startDate,
+  nightsBeforeTransition
+) {
+  const date =
+    new Date(
+      `${startDate}T00:00:00`
+    );
+
+
+  if (
+    Number.isNaN(
+      date.getTime()
+    )
+  ) {
+    return '';
+  }
+
+
+  date.setDate(
+    date.getDate() +
+    nightsBeforeTransition
+  );
+
+
+  const iso =
+    [
+      date.getFullYear(),
+      String(
+        date.getMonth() + 1
+      ).padStart(
+        2,
+        '0'
+      ),
+      String(
+        date.getDate()
+      ).padStart(
+        2,
+        '0'
+      )
+    ].join('-');
+
+
+  const parsed =
+    parseFlexibleDate(
+      iso
+    );
+
+
+  return parsed.valid
+    ? parsed.display
+    : '';
+}
+
+
+function addTripStopTransportServices(
+  intake,
+  tripStops
+) {
+  if (
+    !Array.isArray(
+      tripStops
+    ) ||
+    tripStops.length <
+      2
+  ) {
+    return;
+  }
+
+
+  const travelerCount =
+    Math.max(
+      1,
+      Number(
+        intake.adults ||
+        1
+      ) +
+      Number(
+        intake.children ||
+        0
+      )
+    );
+
+
+  const flightClass =
+    String(
+      intake.flight_class ||
+      ''
+    )
+      .trim()
+      .replace(
+        /^درجة\s+/,
+        ''
+      );
+
+
+  const domesticSegments =
+    [];
+
+
+  let elapsedNights =
+    0;
+
+
+  for (
+    let index = 0;
+    index < tripStops.length - 1;
+    index += 1
+  ) {
+    const currentStop =
+      tripStops[index];
+
+
+    const nextStop =
+      tripStops[
+        index + 1
+      ];
+
+
+    const currentStopType =
+  currentStop?.stopType ===
+    'pass_through'
+    ? 'pass_through'
+    : 'stay';
+
+
+const parsedCurrentNights =
+  Number.parseInt(
+    currentStop?.nights,
+    10
+  );
+
+
+const currentStopNights =
+  currentStopType ===
+    'pass_through'
+    ? 0
+    : (
+        Number.isFinite(
+          parsedCurrentNights
+        )
+          ? Math.max(
+              0,
+              parsedCurrentNights
+            )
+          : 1
+      );
+
+
+elapsedNights +=
+  currentStopNights;
+
+
+    const transitionDate =
+      tripStopTransitionDate(
+        intake.start_date ||
+        '',
+        elapsedNights
+      );
+
+
+    const transport =
+      String(
+        currentStop
+          .transportToNext ||
+        'best'
+      ).trim();
+
+
+    if (
+      transport ===
+        'domestic_flight'
+    ) {
+      domesticSegments.push(
+        createSegment(
+          currentStop.city,
+          nextStop.city,
+          transitionDate,
+          '',
+          '',
+          '',
+          0,
+          ''
+        )
+      );
+
+
+      continue;
+    }
+
+
+    const transportLabels = {
+  private_car:
+    'سيارة خاصة',
+
+  train:
+    'قطار',
+
+  ferry:
+    'عبّارة',
+
+  boat:
+    'قارب',
+
+  shared_transfer:
+    'نقل مشترك',
+
+  best:
+    'الأفضل حسب المسافة',
+
+  no_preference:
+    'بدون تفضيل'
+};
+
+
+    const details =
+      transportLabels[
+        transport
+      ] ||
+      'تنقل بين المدن';
+
+
+    state.services.push({
+      id:
+        `service-${Date.now()}-${index}-${Math.random()
+          .toString(36)
+          .slice(2, 7)}`,
+
+      category:
+        'transfer',
+
+      name:
+        `تنقل ${currentStop.city} إلى ${nextStop.city}`,
+
+      details:
+        transitionDate
+          ? `${details} | ${transitionDate}`
+          : details,
+
+      costMode:
+        'total',
+
+      qty:
+        1,
+
+      cost:
+        0
+    });
+  }
+
+
+  if (
+    domesticSegments.length
+  ) {
+    state.services.push({
+      id:
+        `service-${Date.now()}-domestic-${Math.random()
+          .toString(36)
+          .slice(2, 7)}`,
+
+      category:
+        'flight',
+
+      name:
+  'تذاكر الطيران الداخلي',
+
+flightType:
+  'domestic',
+
+details:
+        flightClass
+          ? `درجة ${flightClass}`
+          : '',
+
+      costMode:
+        'total',
+
+      qty:
+        travelerCount,
+
+      cost:
+        0,
+
+      segments:
+        domesticSegments
+    });
+  }
+}
+
+
+function addTripStopHotelServices(
+  intake,
+  tripStops
+) {
+  if (
+    !Array.isArray(
+      tripStops
+    ) ||
+    !tripStops.length
+  ) {
+    return;
+  }
+
+
+  if (
+    !Array.isArray(
+      state.services
+    )
+  ) {
+    state.services = [];
+  }
+
+
+  if (
+    !Array.isArray(
+      state.hotelCities
+    )
+  ) {
+    state.hotelCities = [];
+  }
+
+
+  const rawStartDate =
+    String(
+      intake?.start_date ||
+      ''
+    ).trim();
+
+
+  const dateParts =
+    rawStartDate
+      .split('-')
+      .map(
+        value =>
+          Number(
+            value
+          )
+      );
+
+
+  if (
+    dateParts.length !== 3 ||
+    !dateParts[0] ||
+    !dateParts[1] ||
+    !dateParts[2]
+  ) {
+    console.warn(
+      '[Trip hotels] تاريخ البداية غير صالح:',
+      rawStartDate
+    );
+
+    return;
+  }
+
+
+  const [
+    startYear,
+    startMonth,
+    startDay
+  ] = dateParts;
+
+
+  function dateAfterNights(
+    nights
+  ) {
+    const date =
+      new Date(
+        startYear,
+        startMonth - 1,
+        startDay
+      );
+
+
+    date.setDate(
+      date.getDate() +
+      nights
+    );
+
+
+    const iso =
+      [
+        date.getFullYear(),
+
+        String(
+          date.getMonth() + 1
+        ).padStart(
+          2,
+          '0'
+        ),
+
+        String(
+          date.getDate()
+        ).padStart(
+          2,
+          '0'
+        )
+      ].join('-');
+
+
+    const parsed =
+      parseFlexibleDate(
+        iso
+      );
+
+
+    return parsed.valid
+      ? parsed.display
+      : iso;
+  }
+
+
+  const hotelStars =
+    String(
+      intake?.hotel_stars ||
+      ''
+    ).trim();
+
+
+  const newHotels = [];
+
+
+  let elapsedNights =
+    0;
+
+
+  tripStops.forEach(
+    (
+      stop,
+      index
+    ) => {
+      const city =
+        String(
+          stop?.city ||
+          ''
+        ).trim();
+
+
+      if (
+        !city
+      ) {
+        return;
+      }
+
+
+      const nights =
+        Math.max(
+          1,
+          Number.parseInt(
+            stop?.nights,
+            10
+          ) ||
+          1
+        );
+
+
+      const checkIn =
+        dateAfterNights(
+          elapsedNights
+        );
+
+
+      const checkOut =
+        dateAfterNights(
+          elapsedNights +
+          nights
+        );
+
+
+      const detailsParts = [
+        `${nights} ${
+          nights === 1
+            ? 'ليلة'
+            : 'ليال'
+        }`
+      ];
+
+
+      if (
+        hotelStars
+      ) {
+        detailsParts.push(
+          `${hotelStars} نجوم`
+        );
+      }
+
+
+      const hotelService = {
+        id:
+          `service-${Date.now()}-hotel-${index}-${Math.random()
+            .toString(36)
+            .slice(2, 7)}`,
+
+        category:
+          'hotel',
+
+        city,
+
+        name:
+          `فندق في ${city}`,
+
+        details:
+          detailsParts.join(
+            ' | '
+          ),
+
+        checkIn,
+
+        checkInTime:
+          '3:00 PM',
+
+        checkOut,
+
+        checkOutTime:
+          '12:00 PM',
+
+        hotelTax:
+          0,
+
+        costMode:
+          'total',
+
+        qty:
+          1,
+
+        cost:
+          0,
+
+        tripStopIndex:
+          index
+      };
+
+
+      newHotels.push(
+        hotelService
+      );
+
+
+      elapsedNights +=
+        nights;
+    }
+  );
+
+
+  state.services.push(
+    ...newHotels
+  );
+
+
+  state.hotelCities = [
+    ...new Set([
+      ...state.hotelCities,
+
+      ...newHotels.map(
+        hotel =>
+          hotel.city
+      )
+    ])
+  ];
+
+
+  console.log(
+    '[Trip hotels] تمت إضافة الفنادق:',
+    newHotels
+  );
+}
+
+
 async function importClientIntake(
   intake
 ) {
@@ -15606,6 +17658,379 @@ if (
   state.childAges =
     importedChildAges;
 }
+
+
+const importedTripStops =
+  parseIntakeTripStops(
+    intake.trip_stops
+  )
+    .flatMap(
+      (
+        stop,
+        cityIndex
+      ) => {
+        const parentCity =
+          String(
+            stop?.city ||
+            ''
+          ).trim();
+
+
+        if (
+          !parentCity
+        ) {
+          return [];
+        }
+
+
+        const rawAreas =
+          Array.isArray(
+            stop?.areas
+          )
+            ? stop.areas
+            : [];
+
+
+        /*
+         * نوع المدينة الأساسية:
+         *
+         * stay
+         * = إقامة فعلية
+         *
+         * group
+         * = مجرد مجموعة للمناطق
+         *   مثل بالي
+         *
+         * pass_through
+         * = محطة مرور فعلية
+         *   بدون إقامة
+         */
+        const rawParentStopType =
+          String(
+            stop?.stopType ||
+            ''
+          ).trim();
+
+
+        const parsedParentNights =
+          Number.parseInt(
+            stop?.nights,
+            10
+          );
+
+
+        /*
+         * دعم الطلبات القديمة:
+         * إذا لم يكن stopType موجودًا،
+         * وكانت المدينة تحتوي مناطق
+         * وليالي المدينة 0،
+         * نعتبرها مجموعة مناطق.
+         */
+        const parentStopType =
+          [
+            'stay',
+            'group',
+            'pass_through'
+          ].includes(
+            rawParentStopType
+          )
+            ? rawParentStopType
+            : (
+                rawAreas.length &&
+                (
+                  !Number.isFinite(
+                    parsedParentNights
+                  ) ||
+                  parsedParentNights <= 0
+                )
+                  ? 'group'
+                  : 'stay'
+              );
+
+
+        const parentNights =
+          parentStopType ===
+            'stay'
+            ? (
+                Number.isFinite(
+                  parsedParentNights
+                )
+                  ? Math.max(
+                      1,
+                      parsedParentNights
+                    )
+                  : 1
+              )
+            : 0;
+
+
+        /*
+         * نحول مناطق المدينة إلى محطات
+         * فعلية بالترتيب.
+         */
+        const areas =
+  rawAreas
+    .map(
+      (
+        areaItem,
+        areaIndex
+      ) => {
+        const area =
+          String(
+            areaItem?.area ||
+            areaItem?.name ||
+            ''
+          ).trim();
+
+
+        if (
+          !area
+        ) {
+          return null;
+        }
+
+
+        const stopType =
+          areaItem?.stopType ===
+            'pass_through'
+            ? 'pass_through'
+            : 'stay';
+
+
+        const parsedNights =
+          Number.parseInt(
+            areaItem?.nights,
+            10
+          );
+
+
+        const nights =
+          stopType ===
+            'pass_through'
+            ? 0
+            : Math.max(
+                1,
+                Number.isFinite(
+                  parsedNights
+                )
+                  ? parsedNights
+                  : 1
+              );
+
+
+        return {
+          city:
+            area,
+
+          parentCity,
+
+          area,
+
+          parentCityIndex:
+            cityIndex,
+
+          tripAreaIndex:
+            areaIndex,
+
+          stopType,
+
+          nights,
+
+          transportToNext:
+            String(
+              areaItem
+                ?.transportToNext ||
+              areaItem
+                ?.transport ||
+              'best'
+            ).trim()
+        };
+      }
+    )
+    .filter(
+      Boolean
+    );
+
+
+        /*
+         * مدينة من نوع group:
+         *
+         * لا نضيف المدينة نفسها للمسار.
+         * نضيف مناطقها فقط.
+         *
+         * مثال:
+         * بالي لا تصبح محطة مستقلة،
+         * لكن أوبود ونوسا دوا وأولواتو
+         * تدخل المسار.
+         */
+        if (
+  parentStopType ===
+    'group'
+) {
+  if (
+    !areas.length
+  ) {
+    return [];
+  }
+
+
+  const groupExitTransport =
+    String(
+      stop?.transportToNext ||
+      'best'
+    ).trim() ||
+    'best';
+
+
+  return areas.map(
+    (
+      areaStop,
+      areaIndex
+    ) => {
+      const isLastArea =
+        areaIndex ===
+          areas.length - 1;
+
+
+      if (
+        !isLastArea
+      ) {
+        return areaStop;
+      }
+
+
+      return {
+        ...areaStop,
+
+        /*
+         * وسيلة النقل الموجودة في بطاقة
+         * المدينة الأساسية تستخدم بعد
+         * آخر منطقة داخل المجموعة.
+         */
+        transportToNext:
+          groupExitTransport
+      };
+    }
+  );
+}
+
+
+        /*
+         * المدينة نفسها محطة فعلية:
+         * إما إقامة أو عبور.
+         */
+        const parentStop = {
+          city:
+            parentCity,
+
+          parentCity:
+            '',
+
+          area:
+            '',
+
+          parentCityIndex:
+            cityIndex,
+
+          tripAreaIndex:
+            -1,
+
+          stopType:
+            parentStopType,
+
+          nights:
+            parentNights,
+
+          transportToNext:
+            String(
+              stop?.transportToNext ||
+              'best'
+            ).trim()
+        };
+
+
+        /*
+         * إذا كان للمدينة مناطق،
+         * نضع المدينة أولًا ثم المناطق.
+         */
+        if (
+          areas.length
+        ) {
+          return [
+            parentStop,
+            ...areas
+          ];
+        }
+
+
+        return [
+          parentStop
+        ];
+      }
+    )
+    .filter(
+      stop =>
+        stop.city
+    );
+
+
+state.tripStops =
+  importedTripStops;
+
+
+const importedHotelCities =
+  importedTripStops
+    .filter(
+      stop => {
+        const stopType =
+          stop?.stopType ===
+            'pass_through'
+            ? 'pass_through'
+            : 'stay';
+
+
+        const parsedNights =
+          Number.parseInt(
+            stop?.nights,
+            10
+          );
+
+
+        return (
+          stopType ===
+            'stay' &&
+          Number.isFinite(
+            parsedNights
+          ) &&
+          parsedNights > 0
+        );
+      }
+    )
+    .map(
+      stop =>
+        String(
+          stop?.city ||
+          ''
+        ).trim()
+    )
+    .filter(
+      Boolean
+    );
+
+
+state.hotelCities = [
+  ...new Set([
+    ...(
+      Array.isArray(
+        state.hotelCities
+      )
+        ? state.hotelCities
+        : []
+    ),
+
+    ...importedHotelCities
+  ])
+];
 
 
 if (
@@ -15746,8 +18171,191 @@ details:
       flightService;
   } else {
     state.services.push(
-      flightService
-    );
+  flightService
+);
+
+
+addTripStopTransportServices(
+  intake,
+  importedTripStops
+);
+
+
+let hotelElapsedNights =
+  0;
+
+
+const hotelTravelerCount =
+  Math.max(
+    1,
+    Number(
+      intake.adults ||
+      0
+    ) +
+    Number(
+      intake.children ||
+      0
+    )
+  );
+
+
+importedTripStops.forEach(
+  (
+    stop,
+    index
+  ) => {
+    const city =
+      String(
+        stop?.city ||
+        ''
+      ).trim();
+
+
+    if (
+      !city
+    ) {
+      return;
+    }
+
+
+    const stopType =
+      stop?.stopType ===
+        'pass_through'
+        ? 'pass_through'
+        : 'stay';
+
+
+    const parsedNights =
+      Number.parseInt(
+        stop?.nights,
+        10
+      );
+
+
+    const nights =
+      stopType ===
+        'pass_through'
+        ? 0
+        : (
+            Number.isFinite(
+              parsedNights
+            )
+              ? Math.max(
+                  1,
+                  parsedNights
+                )
+              : 1
+          );
+
+
+    /*
+     * تاريخ الوصول إلى هذه المحطة يعتمد
+     * على مجموع ليالي المحطات السابقة فقط.
+     *
+     * محطة العبور = 0 ليلة،
+     * لذلك لا تغير التاريخ.
+     */
+    const checkIn =
+      tripStopTransitionDate(
+        intake.start_date,
+        hotelElapsedNights
+      );
+
+
+    /*
+     * عبور فقط:
+     * لا ننشئ فندقًا.
+     * نتركها في المسار ونكمل للمحطة التالية.
+     */
+    if (
+      stopType ===
+        'pass_through'
+    ) {
+      hotelElapsedNights +=
+        nights;
+
+      return;
+    }
+
+
+    const checkOut =
+      tripStopTransitionDate(
+        intake.start_date,
+        hotelElapsedNights +
+          nights
+      );
+
+
+    state.services.push({
+      id:
+        `hotel-${Date.now()}-${index}-${Math.random()
+          .toString(36)
+          .slice(2, 7)}`,
+
+      category:
+        'hotel',
+
+      city,
+
+      name:
+        `فندق في ${city}`,
+
+      details:
+        intake.hotel_stars
+          ? `${nights} ${
+              nights === 1
+                ? 'ليلة'
+                : 'ليال'
+            } | ${intake.hotel_stars} نجوم`
+          : `${nights} ${
+              nights === 1
+                ? 'ليلة'
+                : 'ليال'
+            }`,
+
+      checkIn,
+
+      checkInTime:
+        '3:00 PM',
+
+      checkOut,
+
+      checkOutTime:
+        '12:00 PM',
+
+      hotelTax:
+        0,
+
+      costMode:
+        'total',
+
+      qty:
+        hotelTravelerCount,
+
+      cost:
+        0,
+
+      /*
+       * مهم جدًا:
+       * نحافظ على رقم المحطة الأصلي
+       * في المسار الكامل.
+       */
+      tripStopIndex:
+        index
+    });
+
+
+    /*
+     * بعد انتهاء إقامة هذه المحطة
+     * ننتقل بالتاريخ للمحطة التالية.
+     */
+    hotelElapsedNights +=
+      nights;
+  }
+);
+
+
+renderAll();
   }
 }
 
@@ -16757,6 +19365,4714 @@ $('#openClientIntakeBtn')
         '_blank',
         'noopener'
       );
+    }
+  );
+  function openLunaJsonDialog() {
+  const dialog =
+    $('#lunaJsonDialog');
+
+
+  if (
+    !dialog
+  ) {
+    return;
+  }
+
+
+  const status =
+    $('#lunaResultsStatus');
+
+
+  if (
+    status
+  ) {
+    status.hidden =
+      true;
+
+    status.textContent =
+      '';
+
+    status.classList.remove(
+      'is-error',
+      'is-success'
+    );
+  }
+
+
+  dialog.showModal();
+
+
+  setTimeout(
+    () => {
+      $('#lunaResultsJson')
+        ?.focus();
+    },
+    50
+  );
+}
+
+
+function closeLunaJsonDialog() {
+  const dialog =
+    $('#lunaJsonDialog');
+
+
+  if (
+    dialog?.open
+  ) {
+    dialog.close();
+  }
+}
+
+
+function openLunaResultsDialog() {
+  const dialog =
+    $('#lunaResultsDialog');
+
+
+  if (
+    !dialog
+  ) {
+    return;
+  }
+
+
+  dialog.showModal();
+}
+
+
+function closeLunaResultsDialog() {
+  const dialog =
+    $('#lunaResultsDialog');
+
+
+  if (
+    dialog?.open
+  ) {
+    dialog.close();
+  }
+}
+
+
+/*
+ * زر "استيراد" في صفحة الخدمات
+ * يفتح فقط نافذة لصق JSON.
+ */
+$('#openLunaResultsBtn')
+  ?.addEventListener(
+    'click',
+    openLunaJsonDialog
+  );
+
+
+$('#closeLunaJsonBtn')
+  ?.addEventListener(
+    'click',
+    closeLunaJsonDialog
+  );
+
+
+$('#cancelLunaJsonBtn')
+  ?.addEventListener(
+    'click',
+    closeLunaJsonDialog
+  );
+
+
+$('#closeLunaResultsBtn')
+  ?.addEventListener(
+    'click',
+    closeLunaResultsDialog
+  );
+
+
+$('#cancelLunaResultsBtn')
+  ?.addEventListener(
+    'click',
+    closeLunaResultsDialog
+  );
+
+
+/*
+ * الضغط خارج نافذة JSON يغلقها.
+ */
+$('#lunaJsonDialog')
+  ?.addEventListener(
+    'click',
+    event => {
+      if (
+        event.target ===
+        event.currentTarget
+      ) {
+        closeLunaJsonDialog();
+      }
+    }
+  );
+
+
+/*
+ * الضغط خارج نافذة النتائج يغلقها.
+ */
+$('#lunaResultsDialog')
+  ?.addEventListener(
+    'click',
+    event => {
+      if (
+        event.target ===
+        event.currentTarget
+      ) {
+        closeLunaResultsDialog();
+      }
+    }
+  );
+  function getRequestedFlightClass() {
+  const flightService =
+    Array.isArray(
+      state.services
+    )
+      ? state.services.find(
+          service =>
+            service.category ===
+            'flight'
+        )
+      : null;
+
+
+  return String(
+    flightService?.details ||
+    'غير محددة'
+  ).trim();
+}
+
+
+function buildLunaTravelSearchPrompt() {
+  const origin =
+    $('#origin')
+      ?.value
+      ?.trim() ||
+    'غير محددة';
+
+
+  const destination =
+    $('#destination')
+      ?.value
+      ?.trim() ||
+    'غير محددة';
+
+
+  const startDate =
+    $('#startDate')
+      ?.value ||
+    'غير محدد';
+
+
+  const endDate =
+    $('#endDate')
+      ?.value ||
+    'غير محدد';
+
+
+  const adults =
+    Math.max(
+      1,
+      Number(
+        $('#adults')
+          ?.value ||
+        1
+      )
+    );
+
+
+  const children =
+    Math.max(
+      0,
+      Number(
+        $('#children')
+          ?.value ||
+        0
+      )
+    );
+
+
+  const childAges =
+    Array.isArray(
+      state.childAges
+    )
+      ? state.childAges
+      : [];
+
+
+  const hotelStars =
+    $('#hotelStars')
+      ?.value ||
+    'غير محدد';
+
+
+  const flightClass =
+    getRequestedFlightClass();
+
+
+  const internalNotes =
+    $('#internalNotes')
+      ?.value
+      ?.trim() ||
+    'لا توجد';
+
+
+    const budgetMatch =
+  internalNotes.match(
+    /^الميزانية التقريبية:\s*(.+)$/m
+  );
+
+
+const tripStyleMatch =
+  internalNotes.match(
+    /^نوع الرحلة:\s*(.+)$/m
+  );
+
+
+const customerNotesMarker =
+  'طلبات وملاحظات العميل:';
+
+
+const customerNotes =
+  internalNotes.includes(
+    customerNotesMarker
+  )
+    ? internalNotes
+        .split(
+          customerNotesMarker
+        )
+        .slice(1)
+        .join(
+          customerNotesMarker
+        )
+        .trim()
+    : '';
+
+
+const budget =
+  budgetMatch?.[1]?.trim() ||
+  'غير محددة';
+
+
+const tripStyle =
+  tripStyleMatch?.[1]?.trim() ||
+  'غير محدد';
+  
+
+    const lunaTripStops =
+  Array.isArray(
+    state.tripStops
+  )
+    ? state.tripStops
+        .map(
+          (
+            stop,
+            index
+          ) => {
+            const city =
+              String(
+                stop?.city ||
+                ''
+              ).trim();
+
+
+            if (
+              !city
+            ) {
+              return '';
+            }
+
+
+            const parentCity =
+              String(
+                stop?.parentCity ||
+                ''
+              ).trim();
+
+
+            const displayCity =
+              parentCity &&
+              parentCity !== city
+                ? `${city} - ${parentCity}`
+                : city;
+
+
+            const stopType =
+              stop?.stopType ===
+                'pass_through'
+                ? 'pass_through'
+                : 'stay';
+
+
+            const isPassThrough =
+              stopType ===
+                'pass_through';
+
+
+            const parsedNights =
+              Number.parseInt(
+                stop?.nights,
+                10
+              );
+
+
+            const nights =
+              isPassThrough
+                ? 0
+                : (
+                    Number.isFinite(
+                      parsedNights
+                    )
+                      ? Math.max(
+                          0,
+                          parsedNights
+                        )
+                      : 1
+                  );
+
+
+            const transportLabels = {
+              best:
+                'اختر أفضل وسيلة حسب المسافة',
+
+              domestic_flight:
+                'طيران داخلي',
+
+              private_car:
+                'سيارة خاصة',
+
+              train:
+                'قطار',
+
+              ferry:
+                'عبّارة',
+
+              boat:
+                'قارب',
+
+              shared_transfer:
+                'نقل مشترك',
+
+              no_preference:
+                'بدون تفضيل'
+            };
+
+
+            const transport =
+              index <
+                state.tripStops.length - 1
+                ? (
+                    transportLabels[
+                      stop?.transportToNext
+                    ] ||
+                    'اختر أفضل وسيلة'
+                  )
+                : 'نهاية الرحلة';
+
+
+            const stayDescription =
+              isPassThrough
+                ? 'عبور فقط - بدون إقامة وبدون فندق'
+                : `${nights} ${nights === 1 ? 'ليلة' : 'ليال'}`;
+
+
+            return [
+              `${index + 1}. ${displayCity}`,
+              `tripStopIndex=${index}`,
+              `نوع المحطة: ${isPassThrough ? 'عبور فقط' : 'إقامة'}`,
+              `الإقامة: ${stayDescription}`,
+              `الانتقال التالي: ${transport}`
+            ].join(' | ');
+          }
+        )
+        .filter(
+          Boolean
+        )
+        .join('\n')
+    : '';
+
+  return `
+ابحث على الويب عن خيارات طيران وفنادق حقيقية ومتاحة للرحلة التالية.
+
+بيانات الرحلة
+مدينة المغادرة: ${origin}
+الوجهة: ${destination}
+تاريخ السفر: ${startDate}
+تاريخ العودة: ${endDate}
+المسافرون: ${adults} بالغ${children ? `، ${children} طفل` : ''}
+${children ? `أعمار الأطفال: ${childAges.length ? childAges.join('، ') : 'غير محددة'}` : ''}
+درجة الطيران: ${flightClass}
+تصنيف الفندق: ${hotelStars} نجوم
+الميزانية: ${budget}
+نوع الرحلة: ${tripStyle}
+${customerNotes ? `طلبات خاصة: ${customerNotes}` : ''}
+
+مسار الرحلة
+${lunaTripStops || `1. ${destination}`}
+
+المطلوب
+لكل خدمة أعد خيارين فقط:
+- economy: أرخص خيار جيد وعملي.
+- premium: أفضل قيمة مقابل السعر، مريح ومزاياه جيدة بدون مبالغة في السعر.
+
+الطيران الدولي
+- خياران فقط: economy و premium.
+- كل خيار يمثل رحلة الذهاب والعودة كاملة داخل عنصر flight واحد.
+- flightType="international"
+- groupKey="international-roundtrip"
+- groupLabel="الطيران الدولي"
+- optionType="economy" أو "premium"
+- كل جزء طيران يكون داخل segments.
+- direction="outbound" للذهاب.
+- direction="return" للعودة.
+- الترانزيت لا يكون flight مستقلاً.
+- outboundDuration هي مدة الذهاب كاملة من أول إقلاع حتى الوصول النهائي وتشمل الترانزيت.
+- returnDuration هي مدة العودة كاملة من أول إقلاع حتى الوصول النهائي وتشمل الترانزيت.
+- layoverAfter هي مدة التوقف بعد المقطع، وتكون فارغة إذا لم يوجد توقف.
+- layoverCity هي مدينة التوقف بعد هذا المقطع، مثال "أبوظبي"، وتكون فارغة إذا لم يوجد توقف.
+- layoverType يحدد نوع التوقف بعد هذا المقطع.
+- استخدم layoverType="transit" إذا كان التوقف ترانزيت أو اتصال رحلة عادي.
+- استخدم layoverType="transfer" فقط إذا كان المصدر يوضح أن التوقف Transfer أو Self-transfer أو يتطلب انتقالاً منفصلاً أو تغيير مطار.
+- إذا لم يوجد توقف اجعل layoverAfter="" وlayoverCity="" وlayoverType="".
+- لا تخمن أن التوقف transfer. إذا لم يوجد دليل واضح على transfer اعتبره transit.
+- استخدم اسم مدينة التوقف الفعلي وليس رمز المطار فقط.
+- مثال: إذا كان التوقف في أبوظبي وكان اتصالاً عادياً، استخدم layoverCity="أبوظبي" وlayoverType="transit".
+- مثال: إذا كان التوقف في أبوظبي ويتطلب Transfer مؤكداً، استخدم layoverCity="أبوظبي" وlayoverType="transfer".
+- استخدم أوقات الإقلاع والوصول المحلية كما تظهر في المصدر.
+- فضل الرحلة المباشرة، ثم الأقل توقفاً، مع مراعاة السعر والراحة.
+- في baggage لا تكتب الوزن أو عدد القطع أو تفاصيل السياسة.
+- استخدم فقط وصفاً مختصراً من هذه القيم:
+  "أمتعة مشحونة + حقيبة يد"
+  "أمتعة مشحونة"
+  "حقيبة يد"
+  "غير محددة"
+الطيران الداخلي
+- ابحث فقط عن الانتقالات المحددة كطيران داخلي في مسار الرحلة.
+- لكل انتقال خياران فقط: economy و premium.
+- flightType="domestic"
+- لكل مسار groupKey مستقل مثل "domestic-0-1".
+- groupLabel يكون اسم المسار.
+- لا تدمج انتقالين داخليين مختلفين.
+- الترانزيت يبقى داخل segments لنفس الرحلة.
+
+الفنادق
+- لكل محطة نوعها "إقامة" ابحث عن خيارين فقط: economy و premium.
+- لا تبحث عن أي فندق لمحطة نوعها "عبور فقط".
+- لا تنشئ hotel object لأي محطة مكتوب فيها "عبور فقط - بدون إقامة وبدون فندق".
+- استخدم tripStopIndex المكتوب صراحة بجانب المحطة في مسار الرحلة.
+- tripStopIndex هو رقم المحطة في المسار الكامل وليس ترتيب الفنادق فقط.
+- لا تعيد ترقيم tripStopIndex بعد تجاهل محطات العبور.
+- مثال: إذا كانت المحطات tripStopIndex=0 إقامة و tripStopIndex=1 عبور فقط و tripStopIndex=2 إقامة، فيجب أن تستخدم الفنادق الرقمين 0 و2 فقط.
+- استخدم stayKey="stay-{tripStopIndex}" بنفس tripStopIndex الأصلي.
+- لا تستخدم stayKey لمحطة عبور فقط.
+- لا تدمج إقامتين حتى لو تكررت نفس المدينة.
+- التزم بعدد الليالي المكتوب لكل محطة إقامة.
+- لا تحول 0 ليلة إلى ليلة واحدة.
+- roomType يكون اسم نوع الغرفة مختصراً فقط.
+- roomSize = مساحة الغرفة فقط، مثال "28 m²". إذا لم تكن مؤكدة استخدم "".
+- taxesIncluded=true إذا كان totalPrice يشمل الضرائب والرسوم الإلزامية.
+- taxesIncluded=false إذا كانت هناك ضريبة أو رسوم إلزامية تضاف فوق totalPrice.
+- إذا taxesIncluded=false ضع قيمة الضريبة الإجمالية في taxesAmount.
+- إذا taxesIncluded=true اجعل taxesAmount=null.
+- لا تضف الضريبة إلى totalPrice عندما taxesIncluded=false.
+- أظهر الوجبات وسياسة الإلغاء إذا كانت متوفرة.
+- premium يعني موقع أو تقييم أو غرفة أو مزايا أفضل بسعر منطقي.
+
+قواعد البحث
+- استخدم معلومات حقيقية وحديثة من الويب.
+- لا تخمن الأسعار أو المواعيد أو التوفر.
+- ضع المصدر والرابط لكل خيار.
+- totalPrice هو السعر الإجمالي.
+- استخدم SAR عندما يكون السعر بالريال السعودي.
+- إذا لم تتأكد من قيمة استخدم null أو "".
+- أعد JSON صالح فقط.
+- لا تكتب markdown أو أي شرح قبل JSON أو بعده.
+
+JSON المطلوب
+
+{
+  "flights": [
+    {
+      "flightType": "international",
+      "groupKey": "international-roundtrip",
+      "groupLabel": "الطيران الدولي",
+      "optionType": "economy",
+
+      "airline": "",
+      "cabinClass": "",
+
+      "totalPrice": null,
+      "currency": "SAR",
+
+      "baggage": "",
+
+      "outboundDuration": "",
+      "returnDuration": "",
+
+      "sourceName": "",
+      "sourceUrl": "",
+      "verifiedAt": "",
+
+      "segments": [
+        {
+          "direction": "outbound",
+
+          "from": "",
+          "to": "",
+
+          "departureDate": "YYYY-MM-DD",
+          "departureTime": "HH:mm",
+
+          "arrivalDate": "YYYY-MM-DD",
+          "arrivalTime": "HH:mm",
+
+                    "duration": "",
+          "layoverAfter": "",
+          "layoverCity": "",
+          "layoverType": ""
+        }
+      ]
+    }
+  ],
+
+  "hotels": [
+    {
+      "tripStopIndex": 0,
+      "stayKey": "stay-0",
+      "optionType": "economy",
+
+      "name": "",
+      "city": "",
+      "stars": null,
+
+      "roomType": "",
+"roomSize": "",
+"board": "",
+
+      "checkIn": "YYYY-MM-DD",
+      "checkOut": "YYYY-MM-DD",
+      "nights": null,
+
+      "totalPrice": null,
+"currency": "SAR",
+
+"taxesIncluded": true,
+"taxesAmount": null,
+
+"cancellation": "",
+
+      "sourceName": "",
+      "sourceUrl": "",
+      "verifiedAt": ""
+    }
+  ]
+}
+`.trim();
+}
+
+
+async function copyLunaTravelSearchPrompt() {
+  const prompt =
+    buildLunaTravelSearchPrompt();
+
+
+  try {
+    await navigator.clipboard.writeText(
+      prompt
+    );
+
+
+    toast(
+      'تم نسخ طلب البحث. الصقه الآن في Luna'
+    );
+
+
+    return;
+  } catch (
+    error
+  ) {
+    console.warn(
+      '[Luna Clipboard]',
+      error
+    );
+  }
+
+
+  const textarea =
+    document.createElement(
+      'textarea'
+    );
+
+
+  textarea.value =
+    prompt;
+
+
+  textarea.style.position =
+    'fixed';
+
+
+  textarea.style.opacity =
+    '0';
+
+
+  document.body.appendChild(
+    textarea
+  );
+
+
+  textarea.select();
+
+
+  document.execCommand(
+    'copy'
+  );
+
+
+  textarea.remove();
+
+
+  toast(
+    'تم نسخ طلب البحث. الصقه الآن في Luna'
+  );
+}
+
+
+$('#lunaTravelSearchBtn')
+  ?.addEventListener(
+    'click',
+    copyLunaTravelSearchPrompt
+  );
+  function setLunaResultsStatus(
+  message,
+  type = ''
+) {
+  const status =
+    $('#lunaResultsStatus');
+
+
+  if (
+    !status
+  ) {
+    return;
+  }
+
+
+  status.hidden =
+    !message;
+
+
+  status.textContent =
+    message;
+
+
+  status.classList.toggle(
+    'is-error',
+    type === 'error'
+  );
+
+
+  status.classList.toggle(
+    'is-success',
+    type === 'success'
+  );
+}
+
+
+function cleanLunaJsonText(
+  value
+) {
+  let text =
+    String(
+      value ||
+      ''
+    ).trim();
+
+
+  if (
+    text.startsWith(
+      '```'
+    )
+  ) {
+    text =
+      text.replace(
+        /^```(?:json)?\s*/i,
+        ''
+      );
+
+
+    text =
+      text.replace(
+        /\s*```$/,
+        ''
+      );
+  }
+
+
+  return text.trim();
+}
+
+
+function parseLunaResults() {
+  const textarea =
+    $('#lunaResultsJson');
+
+
+  if (
+    !textarea
+  ) {
+    throw new Error(
+      'حقل نتائج Luna غير موجود'
+    );
+  }
+
+
+  const text =
+    cleanLunaJsonText(
+      textarea.value
+    );
+
+
+  if (
+    !text
+  ) {
+    throw new Error(
+      'الصق نتائج Luna أولاً'
+    );
+  }
+
+
+  let data;
+
+
+  try {
+    data =
+      JSON.parse(
+        text
+      );
+  } catch (
+    error
+  ) {
+    console.error(
+      '[Luna JSON]',
+      error
+    );
+
+
+    throw new Error(
+      'JSON غير صالح. تأكد أنك نسخت النتيجة كاملة من Luna'
+    );
+  }
+
+
+  if (
+    !data ||
+    typeof data !==
+      'object' ||
+    Array.isArray(
+      data
+    )
+  ) {
+    throw new Error(
+      'صيغة نتائج Luna غير صحيحة'
+    );
+  }
+
+
+  const flights =
+    Array.isArray(
+      data.flights
+    )
+      ? data.flights
+      : [];
+
+
+  const hotels =
+    Array.isArray(
+      data.hotels
+    )
+      ? data.hotels
+      : [];
+
+
+  if (
+    flights.length ===
+      0 &&
+    hotels.length ===
+      0
+  ) {
+    throw new Error(
+      'لم أجد أي رحلات أو فنادق داخل النتائج'
+    );
+  }
+
+
+  return {
+    flights,
+    hotels
+  };
+}
+
+function safeLunaSourceUrl(
+  value
+) {
+  const url =
+    String(
+      value ||
+      ''
+    ).trim();
+
+
+  if (
+    !/^https?:\/\//i.test(
+      url
+    )
+  ) {
+    return '';
+  }
+
+
+  return url;
+}
+
+
+function lunaPriceText(
+  value,
+  currency = 'SAR'
+) {
+  const number =
+    Number(
+      value
+    );
+
+
+  if (
+    !Number.isFinite(
+      number
+    )
+  ) {
+    return 'السعر غير متوفر';
+  }
+
+
+  return `${englishNumber.format(number)} ${escapeHtml(
+    currency ||
+    'SAR'
+  )}`;
+}
+
+
+function lunaFlightSegmentsHtml(
+  segments,
+  flight
+) {
+  if (
+    !Array.isArray(
+      segments
+    ) ||
+    !segments.length
+  ) {
+    return `
+      <div class="luna-result-muted">
+        تفاصيل الرحلة غير متوفرة
+      </div>
+    `;
+  }
+
+
+  function normalizeDirection(
+    value
+  ) {
+    const direction =
+      String(
+        value ||
+        ''
+      )
+        .trim()
+        .toLowerCase();
+
+
+    if (
+      direction ===
+        'outbound'
+    ) {
+      return 'outbound';
+    }
+
+
+    if (
+      direction ===
+        'return' ||
+      direction ===
+        'inbound'
+    ) {
+      return 'return';
+    }
+
+
+    return '';
+  }
+
+
+  const normalized =
+    segments.map(
+      segment => ({
+        ...segment,
+
+        _direction:
+          normalizeDirection(
+            segment?.direction
+          )
+      })
+    );
+
+
+  let outbound =
+    normalized.filter(
+      segment =>
+        segment._direction ===
+        'outbound'
+    );
+
+
+  let returning =
+    normalized.filter(
+      segment =>
+        segment._direction ===
+        'return'
+    );
+
+
+  /*
+   * دعم النتائج القديمة التي لا تحتوي
+   * على direction.
+   */
+  if (
+    !outbound.length &&
+    !returning.length
+  ) {
+    if (
+      normalized.length ===
+        2
+    ) {
+      outbound = [
+        normalized[0]
+      ];
+
+
+      returning = [
+        normalized[1]
+      ];
+    } else {
+      const groups =
+        [];
+
+
+      let current =
+        [];
+
+
+      normalized.forEach(
+        segment => {
+          if (
+            !current.length
+          ) {
+            current.push(
+              segment
+            );
+
+            return;
+          }
+
+
+          const previous =
+            current[
+              current.length -
+              1
+            ];
+
+
+          const previousTo =
+            String(
+              previous?.to ||
+              ''
+            )
+              .trim()
+              .toUpperCase();
+
+
+          const currentFrom =
+            String(
+              segment?.from ||
+              ''
+            )
+              .trim()
+              .toUpperCase();
+
+
+          if (
+            previousTo &&
+            currentFrom &&
+            previousTo ===
+              currentFrom
+          ) {
+            current.push(
+              segment
+            );
+
+            return;
+          }
+
+
+          groups.push(
+            current
+          );
+
+
+          current = [
+            segment
+          ];
+        }
+      );
+
+
+      if (
+        current.length
+      ) {
+        groups.push(
+          current
+        );
+      }
+
+
+      outbound =
+        groups[0] ||
+        [];
+
+
+      returning =
+        groups[1] ||
+        [];
+    }
+  }
+
+
+  
+
+
+  function directionHtml(
+  label,
+  group,
+  totalDuration
+) {
+    if (
+      !group.length
+    ) {
+      return '';
+    }
+
+
+    const first =
+      group[0];
+
+
+    const last =
+      group[
+        group.length - 1
+      ];
+
+
+    const from =
+      String(
+        first?.from ||
+        'غير محدد'
+      ).trim();
+
+
+    const to =
+      String(
+        last?.to ||
+        'غير محدد'
+      ).trim();
+
+
+    const departureDate =
+      String(
+        first?.departureDate ||
+        'غير محدد'
+      ).trim();
+
+
+    const departureTime =
+      String(
+        first?.departureTime ||
+        'غير محدد'
+      ).trim();
+
+
+      const arrivalTime =
+  String(
+    last?.arrivalTime ||
+    'غير محدد'
+  ).trim();
+
+
+        const stops =
+      Math.max(
+        0,
+        group.length - 1
+      );
+
+
+    const layovers =
+      group
+        .slice(
+          0,
+          -1
+        )
+        .map(
+          segment => {
+            const duration =
+              String(
+                segment?.layoverAfter ||
+                ''
+              ).trim();
+
+
+            const city =
+              String(
+                segment?.layoverCity ||
+                ''
+              ).trim();
+
+
+            const type =
+              String(
+                segment?.layoverType ||
+                ''
+              )
+                .trim()
+                .toLowerCase();
+
+
+            const typeLabel =
+              type ===
+                'transfer'
+                ? 'ترانسفير'
+                : 'ترانزيت';
+
+
+            return {
+              duration,
+              city,
+              typeLabel
+            };
+          }
+        );
+
+
+    const layoverText =
+      layovers
+        .map(
+          layover =>
+            layover.duration
+        )
+        .filter(
+          Boolean
+        )
+        .join(
+          ' + '
+        ) ||
+      (
+        stops === 0
+          ? 'لا يوجد'
+          : 'غير محددة'
+      );
+
+
+    const layoverPlacesHtml =
+      layovers
+        .map(
+          layover => {
+            if (
+              !layover.city
+            ) {
+              return '';
+            }
+
+
+            return `
+              <small>
+                <b>
+                  التوقف:
+                </b>
+
+                ${escapeHtml(
+                  `${layover.typeLabel} ${layover.city}`
+                )}
+              </small>
+            `;
+          }
+        )
+        .filter(
+          Boolean
+        )
+        .join(
+          ''
+        );
+
+
+    const duration =
+      String(
+        totalDuration ||
+        ''
+      ).trim() ||
+      'غير محددة';
+
+
+    return `
+      <div class="luna-segment">
+
+        <strong>
+          ${escapeHtml(
+            label
+          )}
+        </strong>
+
+
+        <span>
+          <b>
+            المسار:
+          
+
+          ${escapeHtml(
+            from
+          )}
+
+          →
+
+          ${escapeHtml(
+            to
+          )}
+          </b>
+        </span>
+
+
+        <small>
+          <b>
+            تاريخ الإقلاع:
+          </b>
+
+          ${escapeHtml(
+            departureDate
+          )}
+        </small>
+
+
+        <small>
+          <b>
+            وقت الإقلاع:
+          </b>
+
+          ${escapeHtml(
+            departureTime
+          )}
+        </small>
+
+
+        <small>
+          <b>
+            وقت الوصول:
+          </b>
+
+          ${escapeHtml(
+            arrivalTime
+          )}
+        </small>
+
+
+        <small>
+          <b>
+            التوقفات:
+          </b>
+
+          ${
+            stops === 0
+              ? 'مباشر'
+              : escapeHtml(
+                  String(
+                    stops
+                  )
+                )
+          }
+        </small>
+
+
+        ${
+          stops > 0
+            ? `
+              ${layoverPlacesHtml}
+
+              <small>
+                <b>
+                  مدة التوقف:
+                </b>
+
+                ${escapeHtml(
+                  layoverText
+                )}
+              </small>
+            `
+            : ''
+        }
+
+
+        <small>
+          <b>
+            مدة الرحلة:
+          </b>
+
+          ${escapeHtml(
+            duration
+          )}
+        </small>
+
+      </div>
+    `;
+  }
+
+
+  return `
+    ${directionHtml(
+  'ذهاب',
+  outbound,
+  flight?.outboundDuration
+)}
+
+${directionHtml(
+  'عودة',
+  returning,
+  flight?.returnDuration
+)}
+  `;
+}
+
+
+function lunaOptionType(
+  value
+) {
+  return String(
+    value ||
+    ''
+  )
+    .trim()
+    .toLowerCase() ===
+      'premium'
+      ? 'premium'
+      : 'economy';
+}
+
+
+function lunaOptionLabel(
+  value
+) {
+  return lunaOptionType(
+    value
+  ) === 'premium'
+    ? 'ممتاز'
+    : 'اقتصادي';
+}
+
+
+function lunaSelectButton(
+  type,
+  index,
+  groupKey,
+  optionType
+) {
+  const selected =
+    selectedLunaResults[
+      type
+    ]?.has(
+      index
+    );
+
+
+  return `
+    <button
+      type="button"
+      class="luna-select-btn${selected ? ' is-selected' : ''}"
+      data-luna-select-type="${escapeHtml(type)}"
+      data-luna-select-index="${index}"
+      data-luna-group="${escapeHtml(groupKey)}"
+      data-luna-option-type="${escapeHtml(
+        lunaOptionType(
+          optionType
+        )
+      )}"
+    >
+      ${
+        selected
+          ? '✓ تم الاختيار'
+          : 'اختيار'
+      }
+    </button>
+  `;
+}
+
+
+function shortLunaBaggage(
+  value
+) {
+  const text =
+    String(
+      value ||
+      ''
+    )
+      .trim()
+      .replace(
+        /\s+/g,
+        ' '
+      );
+
+
+  if (
+    !text
+  ) {
+    return 'غير محددة';
+  }
+
+
+  /*
+   * نلتقط أوزان الأمتعة مثل:
+   * 25 kg
+   * 7kg
+   * 23 KG
+   */
+  const matches =
+    [
+      ...text.matchAll(
+        /(\d+(?:\.\d+)?)\s*kg\b/gi
+      )
+    ];
+
+
+  const weights =
+    [];
+
+
+  matches.forEach(
+    match => {
+      const weight =
+        `${match[1]}kg`;
+
+
+      if (
+        !weights.includes(
+          weight
+        )
+      ) {
+        weights.push(
+          weight
+        );
+      }
+    }
+  );
+
+
+  if (
+    weights.length
+  ) {
+    return weights
+      .slice(
+        0,
+        2
+      )
+      .join(
+        ' + '
+      );
+  }
+
+
+  /*
+   * إذا لم نجد kg نختصر النص فقط.
+   */
+  return text.length >
+    40
+      ? `${text.slice(0, 37).trim()}...`
+      : text;
+}
+
+
+function shortLunaCancellation(
+  value
+) {
+  const text =
+    String(
+      value ||
+      ''
+    )
+      .trim()
+      .replace(
+        /\s+/g,
+        ' '
+      );
+
+
+  if (
+    !text
+  ) {
+    return '';
+  }
+
+
+  const lower =
+    text.toLowerCase();
+
+
+  /*
+   * غير قابل للاسترداد
+   */
+  if (
+    lower.includes(
+      'non-refundable'
+    ) ||
+    lower.includes(
+      'non refundable'
+    ) ||
+    text.includes(
+      'غير قابل للاسترداد'
+    )
+  ) {
+    return 'غير قابل للاسترداد';
+  }
+
+
+  /*
+   * نبحث عن التاريخ.
+   */
+  const dateMatch =
+    text.match(
+      /\b(?:\d{4}-\d{2}-\d{2}|\d{1,2}[-\/]\d{1,2}[-\/]\d{4})\b/
+    );
+
+
+  const hasFreeCancellation =
+    lower.includes(
+      'free cancellation'
+    ) ||
+    text.includes(
+      'إلغاء مجاني'
+    ) ||
+    text.includes(
+      'الإلغاء مجاني'
+    ) ||
+    text.includes(
+      'مجاني حتى'
+    );
+
+
+  if (
+    hasFreeCancellation
+  ) {
+    if (
+      dateMatch
+    ) {
+      return `مجاني حتى ${dateMatch[0]}`;
+    }
+
+
+    return 'إلغاء مجاني';
+  }
+
+
+  /*
+   * إلغاء برسوم
+   */
+  if (
+    lower.includes(
+      'cancellation fee'
+    ) ||
+    text.includes(
+      'رسوم إلغاء'
+    ) ||
+    text.includes(
+      'إلغاء برسوم'
+    )
+  ) {
+    return 'إلغاء برسوم';
+  }
+
+
+  /*
+   * أي صيغة أخرى نختصرها.
+   */
+  return text.length >
+    45
+      ? `${text.slice(0, 42).trim()}...`
+      : text;
+}
+
+function lunaFlightCardHtml(
+  flight,
+  index,
+  groupKey
+) {
+  const sourceUrl =
+    safeLunaSourceUrl(
+      flight?.sourceUrl
+    );
+
+
+  const optionType =
+    lunaOptionType(
+      flight?.optionType
+    );
+
+
+  const optionLabel =
+    lunaOptionLabel(
+      optionType
+    );
+
+
+  return `
+    <article
+      class="luna-result-card"
+      data-option-type="${escapeHtml(
+        optionType
+      )}"
+    >
+
+      <div class="luna-option-badge">
+        ${escapeHtml(
+          optionLabel
+        )}
+      </div>
+
+
+      <div class="luna-result-card-head">
+
+        <div>
+
+          <span class="luna-result-number">
+            ${
+              optionType ===
+                'premium'
+                ? 'أفضل قيمة مقابل السعر'
+                : 'الخيار الاقتصادي'
+            }
+          </span>
+
+
+          <h4>
+            ${escapeHtml(
+              flight?.airline ||
+              'شركة الطيران غير محددة'
+            )}
+          </h4>
+
+        </div>
+
+
+        <strong class="luna-result-price">
+          ${lunaPriceText(
+            flight?.totalPrice,
+            flight?.currency
+          )}
+        </strong>
+
+      </div>
+
+
+      <div class="luna-result-meta luna-flight-meta">
+
+  <span>
+    <b>الدرجة:</b>
+
+    ${escapeHtml(
+      flight?.cabinClass ||
+      'غير محددة'
+    )}
+  </span>
+
+
+  <span>
+    <b>الأمتعة:</b>
+
+    ${escapeHtml(
+      flight?.baggage ||
+      'غير محددة'
+    )}
+  </span>
+
+</div>
+
+
+      <div class="luna-segments-list">
+        ${lunaFlightSegmentsHtml(
+          flight?.segments,
+          flight
+        )}
+      </div>
+
+
+      <div class="luna-result-source">
+
+        <span>
+          المصدر:
+
+          ${escapeHtml(
+            flight?.sourceName ||
+            'غير محدد'
+          )}
+        </span>
+
+
+        ${
+          sourceUrl
+            ? `
+              <a
+                href="${escapeHtml(
+                  sourceUrl
+                )}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                فتح المصدر
+              </a>
+            `
+            : ''
+        }
+
+      </div>
+
+
+      ${lunaSelectButton(
+        'flights',
+        index,
+        groupKey,
+        optionType
+      )}
+
+    </article>
+  `;
+}
+
+
+function shortLunaRoomType(
+  value
+) {
+  const roomType =
+    String(
+      value ||
+      ''
+    )
+      .trim()
+      .replace(
+        /\s+/g,
+        ' '
+      );
+
+
+  if (
+    !roomType
+  ) {
+    return 'غير محددة';
+  }
+
+
+  /*
+   * نحذف ما بعد كلمات المزايا الشائعة.
+   *
+   * مثال:
+   * Outdoor Jacuzzi Suite with ...
+   * تصبح:
+   * Outdoor Jacuzzi Suite
+   */
+  const clean =
+    roomType
+      .split(
+        /\s+(?:with|including|includes|featuring|plus|مع|يشمل|تشمل)\s+/i
+      )[0]
+      .split(
+        /\s*[|;,]\s*/
+      )[0]
+      .trim();
+
+
+  const words =
+    clean.split(
+      /\s+/
+    );
+
+
+  /*
+   * حد أقصى 6 كلمات حتى يبقى الاسم مختصراً.
+   */
+  return words
+    .slice(
+      0,
+      6
+    )
+    .join(
+      ' '
+    );
+}
+
+function lunaHotelCardHtml(
+  hotel,
+  index,
+  groupKey
+) {
+  const sourceUrl =
+    safeLunaSourceUrl(
+      hotel?.sourceUrl
+    );
+
+
+  const optionType =
+    lunaOptionType(
+      hotel?.optionType
+    );
+
+
+  const optionLabel =
+    lunaOptionLabel(
+      optionType
+    );
+
+
+    const taxesNotIncluded =
+  hotel?.taxesIncluded === false ||
+  String(
+    hotel?.taxesIncluded
+  )
+    .trim()
+    .toLowerCase() ===
+    'false';
+
+
+const taxesAmount =
+  Number(
+    hotel?.taxesAmount
+  );
+
+
+const hotelTaxText =
+  taxesNotIncluded &&
+  Number.isFinite(
+    taxesAmount
+  ) &&
+  taxesAmount > 0
+    ? `الضريبة ${lunaPriceText(
+        taxesAmount,
+        hotel?.currency
+      )}`
+    : '';
+
+  return `
+    <article
+      class="luna-result-card"
+      data-option-type="${escapeHtml(
+        optionType
+      )}"
+    >
+
+      <div class="luna-option-badge">
+        ${escapeHtml(
+          optionLabel
+        )}
+      </div>
+
+
+      <div class="luna-result-card-head">
+
+        <div>
+
+          <span class="luna-result-number">
+            ${
+              optionType ===
+                'premium'
+                ? 'أفضل قيمة مقابل السعر'
+                : 'الخيار الاقتصادي'
+            }
+          </span>
+
+          <h4>
+            ${escapeHtml(
+              hotel?.name ||
+              'اسم الفندق غير محدد'
+            )}
+          </h4>
+
+        </div>
+
+
+        <div class="luna-hotel-price-wrap">
+
+  <strong class="luna-result-price">
+    ${lunaPriceText(
+      hotel?.totalPrice,
+      hotel?.currency
+    )}
+  </strong>
+
+
+  ${
+    hotelTaxText
+      ? `
+        <small class="luna-hotel-tax">
+          ${escapeHtml(
+            hotelTaxText
+          )}
+        </small>
+      `
+      : ''
+  }
+
+</div>
+
+      </div>
+
+
+      <div class="luna-result-meta">
+
+        <span>
+          <b>المدينة:</b>
+
+          ${escapeHtml(
+            hotel?.city ||
+            'غير محددة'
+          )}
+        </span>
+
+
+        <span>
+          <b>التصنيف:</b>
+
+          ${
+            hotel?.stars
+              ? `${escapeHtml(
+                  String(
+                    hotel.stars
+                  )
+                )} نجوم`
+              : 'غير محدد'
+          }
+        </span>
+
+
+        <span>
+  <b>الغرفة:</b>
+
+  ${escapeHtml(
+    shortLunaRoomType(
+      hotel?.roomType
+    )
+  )}
+</span>
+
+
+${
+  hotel?.roomSize
+    ? `
+      <span>
+        <b>المساحة:</b>
+
+        ${escapeHtml(
+          hotel.roomSize
+        )}
+      </span>
+    `
+    : ''
+}
+
+
+<span>
+  <b>الوجبات:</b>
+
+          ${escapeHtml(
+            hotel?.board ||
+            'غير محددة'
+          )}
+        </span>
+
+
+        <span>
+          <b>الدخول:</b>
+
+          ${escapeHtml(
+            hotel?.checkIn ||
+            'غير محدد'
+          )}
+        </span>
+
+
+        <span>
+          <b>الخروج:</b>
+
+          ${escapeHtml(
+            hotel?.checkOut ||
+            'غير محدد'
+          )}
+        </span>
+
+
+        <span>
+          <b>الليالي:</b>
+
+          ${escapeHtml(
+            String(
+              hotel?.nights ??
+              'غير محدد'
+            )
+          )}
+        </span>
+
+      </div>
+
+
+      ${
+        hotel?.cancellation
+          ? `
+            <div class="luna-result-note">
+
+              <b>
+                سياسة الإلغاء:
+              </b>
+
+              ${escapeHtml(
+  shortLunaCancellation(
+    hotel.cancellation
+  )
+)}
+
+            </div>
+          `
+          : ''
+      }
+
+
+      <div class="luna-result-source">
+
+        <span>
+          المصدر:
+
+          ${escapeHtml(
+            hotel?.sourceName ||
+            'غير محدد'
+          )}
+        </span>
+
+
+        ${
+          sourceUrl
+            ? `
+              <a
+                href="${escapeHtml(
+                  sourceUrl
+                )}"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                فتح المصدر
+              </a>
+            `
+            : ''
+        }
+
+      </div>
+
+
+      ${lunaSelectButton(
+        'hotels',
+        index,
+        groupKey,
+        optionType
+      )}
+
+    </article>
+  `;
+}
+
+
+function lunaDomesticGroupLabel(
+  flight
+) {
+  const explicitLabel =
+    String(
+      flight?.groupLabel ||
+      ''
+    ).trim();
+
+
+  if (
+    explicitLabel
+  ) {
+    return explicitLabel;
+  }
+
+
+  const segments =
+    Array.isArray(
+      flight?.segments
+    )
+      ? flight.segments
+      : [];
+
+
+  const firstSegment =
+    segments[0];
+
+
+  const lastSegment =
+    segments[
+      segments.length - 1
+    ];
+
+
+  const from =
+    String(
+      firstSegment?.from ||
+      ''
+    ).trim();
+
+
+  const to =
+    String(
+      lastSegment?.to ||
+      ''
+    ).trim();
+
+
+  if (
+    from &&
+    to
+  ) {
+    return `${from} إلى ${to}`;
+  }
+
+
+  return 'رحلة داخلية';
+}
+
+
+function activateLunaResultsTab(
+  tabName
+) {
+  const tabs =
+    [
+      ...document.querySelectorAll(
+        '#lunaResultsTabs .luna-results-tab'
+      )
+    ];
+
+
+  const panels =
+    [
+      ...document.querySelectorAll(
+        '#lunaResultsPreview [data-luna-panel]'
+      )
+    ];
+
+
+  tabs.forEach(
+    tab => {
+      tab.classList.toggle(
+        'is-active',
+        tab.dataset
+          .lunaTab ===
+          tabName
+      );
+    }
+  );
+
+
+  panels.forEach(
+    panel => {
+      panel.hidden =
+        panel.dataset
+          .lunaPanel !==
+        tabName;
+    }
+  );
+}
+
+
+function renderLunaResultsPreview(
+  results
+) {
+  const preview =
+    $('#lunaResultsPreview');
+
+
+  const tabs =
+    $('#lunaResultsTabs');
+
+
+  if (
+    !preview
+  ) {
+    return;
+  }
+
+
+  const flights =
+    Array.isArray(
+      results?.flights
+    )
+      ? results.flights
+      : [];
+
+
+  const hotels =
+    Array.isArray(
+      results?.hotels
+    )
+      ? results.hotels
+      : [];
+
+
+  /*
+   * نحافظ على رقم العنصر الأصلي لأن
+   * selectedLunaResults يعتمد عليه.
+   */
+  const flightItems =
+    flights.map(
+      (
+        flight,
+        index
+      ) => ({
+        flight,
+        index
+      })
+    );
+
+
+  const hotelItems =
+  hotels
+    .map(
+      (
+        hotel,
+        index
+      ) => ({
+        hotel,
+        index
+      })
+    )
+    .filter(
+      item => {
+        const tripStopIndex =
+          Number(
+            item.hotel
+              ?.tripStopIndex
+          );
+
+
+        /*
+         * إذا لم يرسل Luna رقم محطة صالحًا،
+         * نترك الفندق يظهر كالمعتاد.
+         * الحماية هنا مخصصة فقط لمحطات
+         * العبور المعروفة في المسار.
+         */
+        if (
+          !Number.isInteger(
+            tripStopIndex
+          ) ||
+          tripStopIndex < 0
+        ) {
+          return true;
+        }
+
+
+        const tripStop =
+          state.tripStops?.[
+            tripStopIndex
+          ] ||
+          null;
+
+
+        /*
+         * إذا الرقم لا يشير إلى محطة موجودة،
+         * لا نخفي الفندق هنا.
+         */
+        if (
+          !tripStop
+        ) {
+          return true;
+        }
+
+
+        const stopType =
+          tripStop?.stopType ===
+            'pass_through'
+            ? 'pass_through'
+            : 'stay';
+
+
+        const parsedNights =
+          Number.parseInt(
+            tripStop?.nights,
+            10
+          );
+
+
+        const hasNoStay =
+          stopType ===
+            'pass_through' ||
+          (
+            Number.isFinite(
+              parsedNights
+            ) &&
+            parsedNights <= 0
+          );
+
+
+        /*
+         * محطة عبور أو محطة بدون ليال:
+         * لا نظهر الفندق في نتائج Luna.
+         */
+        return !hasNoStay;
+      }
+    );
+
+
+  const internationalFlights =
+    flightItems.filter(
+      item => {
+        const flightType =
+          String(
+            item.flight
+              ?.flightType ||
+            ''
+          )
+            .trim()
+            .toLowerCase();
+
+
+        const groupKey =
+          String(
+            item.flight
+              ?.groupKey ||
+            ''
+          )
+            .trim()
+            .toLowerCase();
+
+
+        /*
+         * إذا كان JSON قديم ولا يحتوي
+         * flightType نعتبره دولياً إلا
+         * إذا كان محدداً كداخلي.
+         */
+        return (
+          flightType ===
+            'international' ||
+          (
+            flightType !==
+              'domestic' &&
+            !groupKey.startsWith(
+              'domestic-'
+            )
+          )
+        );
+      }
+    );
+
+
+  const domesticFlights =
+    flightItems.filter(
+      item => {
+        const flightType =
+          String(
+            item.flight
+              ?.flightType ||
+            ''
+          )
+            .trim()
+            .toLowerCase();
+
+
+        const groupKey =
+          String(
+            item.flight
+              ?.groupKey ||
+            ''
+          )
+            .trim()
+            .toLowerCase();
+
+
+        return (
+          flightType ===
+            'domestic' ||
+          groupKey.startsWith(
+            'domestic-'
+          )
+        );
+      }
+    );
+
+
+  /*
+   * =======================================================
+   * الطيران الدولي
+   * =======================================================
+   */
+
+  const internationalGroupKey =
+    'international-roundtrip';
+
+
+  const internationalSorted =
+    [...internationalFlights]
+      .sort(
+        (
+          a,
+          b
+        ) => {
+          const order = {
+            economy:
+              0,
+
+            premium:
+              1
+          };
+
+
+          return (
+            order[
+              lunaOptionType(
+                a.flight
+                  ?.optionType
+              )
+            ] -
+            order[
+              lunaOptionType(
+                b.flight
+                  ?.optionType
+              )
+            ]
+          );
+        }
+      );
+
+
+  const internationalHtml =
+    internationalSorted.length
+      ? `
+        <section class="luna-results-group">
+
+          <div class="luna-results-group-head">
+
+            <strong>
+              الطيران الدولي
+            </strong>
+
+            <span>
+              الذهاب والعودة
+            </span>
+
+          </div>
+
+
+          <div class="luna-options-grid">
+
+            ${internationalSorted
+              .map(
+                item =>
+                  lunaFlightCardHtml(
+                    item.flight,
+                    item.index,
+                    internationalGroupKey
+                  )
+              )
+              .join(
+                ''
+              )}
+
+          </div>
+
+        </section>
+      `
+      : `
+        <div class="luna-result-empty">
+          لا توجد خيارات طيران دولي
+        </div>
+      `;
+
+
+  /*
+   * =======================================================
+   * الطيران الداخلي
+   * =======================================================
+   */
+
+  const domesticGroups =
+    new Map();
+
+
+  domesticFlights.forEach(
+    (
+      item,
+      position
+    ) => {
+      const flight =
+        item.flight;
+
+
+      const groupKey =
+        String(
+          flight?.groupKey ||
+          ''
+        ).trim() ||
+        `domestic-${position}`;
+
+
+      if (
+        !domesticGroups.has(
+          groupKey
+        )
+      ) {
+        domesticGroups.set(
+          groupKey,
+          {
+            key:
+              groupKey,
+
+            label:
+              lunaDomesticGroupLabel(
+                flight
+              ),
+
+            items:
+              []
+          }
+        );
+      }
+
+
+      domesticGroups
+        .get(
+          groupKey
+        )
+        .items
+        .push(
+          item
+        );
+    }
+  );
+
+
+  const domesticHtml =
+    domesticGroups.size
+      ? [
+          ...domesticGroups.values()
+        ]
+          .map(
+            group => {
+              const sorted =
+                [...group.items]
+                  .sort(
+                    (
+                      a,
+                      b
+                    ) => {
+                      const order = {
+                        economy:
+                          0,
+
+                        premium:
+                          1
+                      };
+
+
+                      return (
+                        order[
+                          lunaOptionType(
+                            a.flight
+                              ?.optionType
+                          )
+                        ] -
+                        order[
+                          lunaOptionType(
+                            b.flight
+                              ?.optionType
+                          )
+                        ]
+                      );
+                    }
+                  );
+
+
+              return `
+                <section class="luna-results-group">
+
+                  <div class="luna-results-group-head">
+
+                    <strong>
+                      ${escapeHtml(
+                        group.label
+                      )}
+                    </strong>
+
+                    <span>
+                      اختر رحلة واحدة
+                    </span>
+
+                  </div>
+
+
+                  <div class="luna-options-grid">
+
+                    ${sorted
+                      .map(
+                        item =>
+                          lunaFlightCardHtml(
+                            item.flight,
+                            item.index,
+                            group.key
+                          )
+                      )
+                      .join(
+                        ''
+                      )}
+
+                  </div>
+
+                </section>
+              `;
+            }
+          )
+          .join(
+            ''
+          )
+      : `
+        <div class="luna-result-empty">
+          لا توجد رحلات داخلية لهذا المسار
+        </div>
+      `;
+
+
+  /*
+   * =======================================================
+   * الفنادق
+   * =======================================================
+   */
+
+  const hotelGroups =
+    new Map();
+
+
+  hotelItems.forEach(
+    (
+      item,
+      position
+    ) => {
+      const hotel =
+        item.hotel;
+
+
+      const rawTripStopIndex =
+        Number(
+          hotel?.tripStopIndex
+        );
+
+
+      const hasTripStopIndex =
+        Number.isInteger(
+          rawTripStopIndex
+        ) &&
+        rawTripStopIndex >=
+          0;
+
+
+      const tripStopIndex =
+        hasTripStopIndex
+          ? rawTripStopIndex
+          : null;
+
+
+      const stayKey =
+        String(
+          hotel?.stayKey ||
+          ''
+        ).trim() ||
+        (
+          tripStopIndex !==
+            null
+            ? `stay-${tripStopIndex}`
+            : `stay-fallback-${position}`
+        );
+
+
+      const routeCity =
+        tripStopIndex !==
+          null
+          ? String(
+              state.tripStops?.[
+                tripStopIndex
+              ]?.city ||
+              ''
+            ).trim()
+          : '';
+
+
+      const city =
+        routeCity ||
+        String(
+          hotel?.city ||
+          'مدينة غير محددة'
+        ).trim();
+
+
+      if (
+        !hotelGroups.has(
+          stayKey
+        )
+      ) {
+        hotelGroups.set(
+          stayKey,
+          {
+            key:
+              stayKey,
+
+            city,
+
+            tripStopIndex,
+
+            checkIn:
+              hotel?.checkIn ||
+              '',
+
+            checkOut:
+              hotel?.checkOut ||
+              '',
+
+            items:
+              []
+          }
+        );
+      }
+
+
+      hotelGroups
+        .get(
+          stayKey
+        )
+        .items
+        .push(
+          item
+        );
+    }
+  );
+
+
+  const sortedHotelGroups =
+    [
+      ...hotelGroups.values()
+    ]
+      .sort(
+        (
+          a,
+          b
+        ) => {
+          if (
+            a.tripStopIndex !==
+              null &&
+            b.tripStopIndex !==
+              null
+          ) {
+            return (
+              a.tripStopIndex -
+              b.tripStopIndex
+            );
+          }
+
+
+          if (
+            a.tripStopIndex !==
+              null
+          ) {
+            return -1;
+          }
+
+
+          if (
+            b.tripStopIndex !==
+              null
+          ) {
+            return 1;
+          }
+
+
+          return 0;
+        }
+      );
+
+
+  const hotelsHtml =
+    sortedHotelGroups.length
+      ? sortedHotelGroups
+          .map(
+            (
+              group,
+              groupIndex
+            ) => {
+              const sorted =
+                [...group.items]
+                  .sort(
+                    (
+                      a,
+                      b
+                    ) => {
+                      const order = {
+                        economy:
+                          0,
+
+                        premium:
+                          1
+                      };
+
+
+                      return (
+                        order[
+                          lunaOptionType(
+                            a.hotel
+                              ?.optionType
+                          )
+                        ] -
+                        order[
+                          lunaOptionType(
+                            b.hotel
+                              ?.optionType
+                          )
+                        ]
+                      );
+                    }
+                  );
+
+
+              const stayNumber =
+                group.tripStopIndex !==
+                  null
+                  ? group.tripStopIndex +
+                    1
+                  : groupIndex +
+                    1;
+
+
+              return `
+                <section class="luna-results-group">
+
+                  <div class="luna-results-group-head">
+
+                    <strong>
+                      ${escapeHtml(
+                        group.city
+                      )}
+                      |
+                      الإقامة ${stayNumber}
+                    </strong>
+
+                    <span>
+                      ${
+                        group.checkIn
+                          ? escapeHtml(
+                              group.checkIn
+                            )
+                          : ''
+                      }
+
+                      ${
+                        group.checkIn &&
+                        group.checkOut
+                          ? ' إلى '
+                          : ''
+                      }
+
+                      ${
+                        group.checkOut
+                          ? escapeHtml(
+                              group.checkOut
+                            )
+                          : ''
+                      }
+                    </span>
+
+                  </div>
+
+
+                  <div class="luna-options-grid">
+
+                    ${sorted
+                      .map(
+                        item =>
+                          lunaHotelCardHtml(
+                            item.hotel,
+                            item.index,
+                            group.key
+                          )
+                      )
+                      .join(
+                        ''
+                      )}
+
+                  </div>
+
+                </section>
+              `;
+            }
+          )
+          .join(
+            ''
+          )
+      : `
+        <div class="luna-result-empty">
+          لا توجد خيارات فنادق
+        </div>
+      `;
+
+
+  preview.innerHTML = `
+
+    <div
+      class="luna-results-panel"
+      data-luna-panel="international"
+    >
+      ${internationalHtml}
+    </div>
+
+
+    <div
+      class="luna-results-panel"
+      data-luna-panel="domestic"
+      hidden
+    >
+      ${domesticHtml}
+    </div>
+
+
+    <div
+      class="luna-results-panel"
+      data-luna-panel="hotels"
+      hidden
+    >
+      ${hotelsHtml}
+    </div>
+
+  `;
+
+
+  preview.hidden =
+    false;
+
+
+  if (
+    tabs
+  ) {
+    tabs.hidden =
+      false;
+  }
+
+
+  activateLunaResultsTab(
+    'international'
+  );
+}
+
+
+$('#lunaResultsTabs')
+  ?.addEventListener(
+    'click',
+    event => {
+      const button =
+        event.target.closest(
+          '.luna-results-tab'
+        );
+
+
+      if (
+        !button
+      ) {
+        return;
+      }
+
+
+      const tabName =
+        String(
+          button.dataset
+            .lunaTab ||
+          ''
+        ).trim();
+
+
+      if (
+        ![
+          'international',
+          'domestic',
+          'hotels'
+        ].includes(
+          tabName
+        )
+      ) {
+        return;
+      }
+
+
+      activateLunaResultsTab(
+        tabName
+      );
+    }
+  );
+
+
+$('#lunaResultsPreview')
+  ?.addEventListener(
+    'click',
+    event => {
+      const button =
+        event.target.closest(
+          '.luna-select-btn'
+        );
+
+
+      if (
+        !button
+      ) {
+        return;
+      }
+
+
+      const type =
+        button.dataset
+          .lunaSelectType;
+
+
+      const index =
+        Number.parseInt(
+          button.dataset
+            .lunaSelectIndex,
+          10
+        );
+
+
+      const groupKey =
+        String(
+          button.dataset
+            .lunaGroup ||
+          ''
+        );
+
+
+      if (
+        ![
+          'flights',
+          'hotels'
+        ].includes(
+          type
+        ) ||
+        !Number.isInteger(
+          index
+        )
+      ) {
+        return;
+      }
+
+
+      const selectedSet =
+        selectedLunaResults[
+          type
+        ];
+
+
+      /*
+       * إذا ضغط المستخدم على الخيار
+       * المختار نفسه، نلغي اختياره.
+       */
+      if (
+        selectedSet.has(
+          index
+        )
+      ) {
+        selectedSet.delete(
+          index
+        );
+
+
+        button.classList.remove(
+          'is-selected'
+        );
+
+
+        button.textContent =
+          'اختيار';
+
+
+        return;
+      }
+
+
+      /*
+       * خيار واحد فقط لكل خدمة.
+       *
+       * اقتصادي أو ممتاز،
+       * وليس الاثنين معاً.
+       */
+      const groupButtons =
+        [
+          ...document.querySelectorAll(
+            '#lunaResultsPreview .luna-select-btn'
+          )
+        ]
+          .filter(
+            candidate =>
+              candidate.dataset
+                .lunaSelectType ===
+                type &&
+              String(
+                candidate.dataset
+                  .lunaGroup ||
+                ''
+              ) ===
+                groupKey
+          );
+
+
+      groupButtons.forEach(
+        candidate => {
+          const candidateIndex =
+            Number.parseInt(
+              candidate.dataset
+                .lunaSelectIndex,
+              10
+            );
+
+
+          if (
+            Number.isInteger(
+              candidateIndex
+            )
+          ) {
+            selectedSet.delete(
+              candidateIndex
+            );
+          }
+
+
+          candidate.classList.remove(
+            'is-selected'
+          );
+
+
+          candidate.textContent =
+            'اختيار';
+        }
+      );
+
+
+      selectedSet.add(
+        index
+      );
+
+
+      button.classList.add(
+        'is-selected'
+      );
+
+
+      button.textContent =
+        '✓ تم الاختيار';
+    }
+  );
+
+  function getSelectedLunaResults() {
+  const flights =
+    Array.isArray(
+      pendingLunaResults?.flights
+    )
+      ? pendingLunaResults.flights
+      : [];
+
+
+  const hotels =
+    Array.isArray(
+      pendingLunaResults?.hotels
+    )
+      ? pendingLunaResults.hotels
+      : [];
+
+
+  const selectedFlights =
+    [...selectedLunaResults.flights]
+      .sort(
+        (a, b) =>
+          a - b
+      )
+      .map(
+        index =>
+          flights[index]
+      )
+      .filter(
+        Boolean
+      );
+
+
+  const selectedHotels =
+    [...selectedLunaResults.hotels]
+      .sort(
+        (a, b) =>
+          a - b
+      )
+      .map(
+        index =>
+          hotels[index]
+      )
+      .filter(
+        Boolean
+      );
+
+
+  return {
+    flights:
+      selectedFlights,
+
+    hotels:
+      selectedHotels
+  };
+}
+
+
+function importSelectedLunaResultsToOffer(
+  selectedResults
+) {
+  const flights =
+    Array.isArray(
+      selectedResults?.flights
+    )
+      ? selectedResults.flights
+      : [];
+
+
+  const hotels =
+    Array.isArray(
+      selectedResults?.hotels
+    )
+      ? selectedResults.hotels
+      : [];
+
+
+  const travelerCount =
+    Math.max(
+      1,
+      Number(
+        $('#adults')?.value ||
+        0
+      ) +
+      Number(
+        $('#children')?.value ||
+        0
+      )
+    );
+
+
+  function normalizeRouteText(
+    value
+  ) {
+    return String(
+      value ||
+      ''
+    )
+      .trim()
+      .toLowerCase()
+      .replace(
+        /\s+/g,
+        ' '
+      );
+  }
+
+
+  function serviceRoutes(
+    service
+  ) {
+    const segments =
+      Array.isArray(
+        service?.segments
+      )
+        ? service.segments
+        : [];
+
+
+    return segments
+      .map(
+        segment => {
+          const from =
+            normalizeRouteText(
+              segment?.from
+            );
+
+
+          const to =
+            normalizeRouteText(
+              segment?.to
+            );
+
+
+          if (
+            !from ||
+            !to
+          ) {
+            return '';
+          }
+
+
+          return `${from}>${to}`;
+        }
+      )
+      .filter(
+        Boolean
+      );
+  }
+
+
+  function serviceDates(
+    service
+  ) {
+    const segments =
+      Array.isArray(
+        service?.segments
+      )
+        ? service.segments
+        : [];
+
+
+    return segments
+      .map(
+        segment =>
+          parseFlexibleDate(
+            segment?.departureDate ||
+            ''
+          ).dateKey
+      )
+      .filter(
+        Boolean
+      );
+  }
+
+
+  function flightMatchScore(
+    existingService,
+    lunaService
+  ) {
+    const existingRoutes =
+      serviceRoutes(
+        existingService
+      );
+
+
+    const lunaRoutes =
+      serviceRoutes(
+        lunaService
+      );
+
+
+    const existingDates =
+      serviceDates(
+        existingService
+      );
+
+
+    const lunaDates =
+      serviceDates(
+        lunaService
+      );
+
+
+    let score =
+      0;
+
+
+    lunaRoutes.forEach(
+      route => {
+        if (
+          existingRoutes.includes(
+            route
+          )
+        ) {
+          score +=
+            5;
+        }
+      }
+    );
+
+
+    lunaDates.forEach(
+      date => {
+        if (
+          existingDates.includes(
+            date
+          )
+        ) {
+          score +=
+            2;
+        }
+      }
+    );
+
+
+    if (
+      existingRoutes.length &&
+      existingRoutes.length ===
+        lunaRoutes.length
+    ) {
+      score +=
+        1;
+    }
+
+
+    return score;
+  }
+
+
+  function isReplaceableFlight(
+    service
+  ) {
+    if (
+      service?.category !==
+      'flight'
+    ) {
+      return false;
+    }
+
+
+    if (
+      String(
+        service?.sourceName ||
+        ''
+      ).trim()
+    ) {
+      return false;
+    }
+
+
+    if (
+      toNumber(
+        service?.cost
+      ) !== 0
+    ) {
+      return false;
+    }
+
+
+    const name =
+      String(
+        service?.name ||
+        ''
+      ).trim();
+
+
+    return [
+      'تذاكر الطيران الدولي',
+      'تذاكر الطيران الداخلي'
+    ].includes(
+      name
+    );
+  }
+
+
+  function isReplaceableHotel(
+    service
+  ) {
+    if (
+      service?.category !==
+      'hotel'
+    ) {
+      return false;
+    }
+
+
+    if (
+      !Number.isInteger(
+        Number(
+          service?.tripStopIndex
+        )
+      )
+    ) {
+      return false;
+    }
+
+
+    if (
+      String(
+        service?.sourceName ||
+        ''
+      ).trim()
+    ) {
+      return false;
+    }
+
+
+    if (
+      toNumber(
+        service?.cost
+      ) !== 0
+    ) {
+      return false;
+    }
+
+
+    const name =
+      String(
+        service?.name ||
+        ''
+      ).trim();
+
+
+    return (
+      name.startsWith(
+        'فندق في '
+      ) ||
+      name ===
+        'اختيار فندق'
+    );
+  }
+
+
+  /*
+   * نأخذ نسخة من الإقامات المبدئية قبل أن
+   * نبدأ باستبدالها.
+   *
+   * هذا مهم خصوصاً إذا تكررت نفس المدينة
+   * مثل بانكوك في بداية ونهاية الرحلة.
+   */
+  const hotelSlots =
+    state.services
+      .filter(
+        isReplaceableHotel
+      )
+      .map(
+        service => ({
+          tripStopIndex:
+            Number(
+              service.tripStopIndex
+            ),
+
+          city:
+            normalizeRouteText(
+              service.city
+            ),
+
+          checkIn:
+            parseFlexibleDate(
+              service.checkIn ||
+              ''
+            ).dateKey,
+
+          checkOut:
+            parseFlexibleDate(
+              service.checkOut ||
+              ''
+            ).dateKey
+        })
+      );
+
+
+  const replacedFlightIds =
+    new Set();
+
+
+  const replacedHotelIndexes =
+    new Set();
+
+
+  const fallbackHotelIndexes =
+    new Set();
+
+
+  flights.forEach(
+    (
+      flight,
+      index
+    ) => {
+      const currency =
+        String(
+          flight?.currency ||
+          'SAR'
+        )
+          .trim()
+          .toUpperCase();
+
+
+      const rawPrice =
+        Number(
+          flight?.totalPrice
+        );
+
+
+      const cost =
+        currency === 'SAR' &&
+        Number.isFinite(
+          rawPrice
+        )
+          ? Math.max(
+              0,
+              rawPrice
+            )
+          : 0;
+
+
+      const details =
+  String(
+    flight?.cabinClass ||
+    ''
+  ).trim();
+
+
+      const segments =
+        Array.isArray(
+          flight?.segments
+        )
+          ? flight.segments.map(
+              segment => {
+                const departureDate =
+                  parseFlexibleDate(
+                    segment?.departureDate ||
+                    ''
+                  );
+
+
+                const departureTime =
+                  parseFlexibleTime(
+                    segment?.departureTime ||
+                    ''
+                  );
+
+
+                const arrivalDate =
+                  parseFlexibleDate(
+                    segment?.arrivalDate ||
+                    ''
+                  );
+
+
+                const arrivalTime =
+                  parseFlexibleTime(
+                    segment?.arrivalTime ||
+                    ''
+                  );
+
+
+                const extraDetails = [
+                  segment?.duration
+                    ? `المدة: ${segment.duration}`
+                    : '',
+
+                  Number.isFinite(
+                    Number(
+                      segment?.stops
+                    )
+                  )
+                    ? (
+                        Number(
+                          segment.stops
+                        ) === 0
+                          ? 'مباشر'
+                          : `التوقفات: ${segment.stops}`
+                      )
+                    : ''
+                ]
+                  .filter(
+                    Boolean
+                  )
+                  .join(
+                    ' | '
+                  );
+
+
+                return createSegment(
+                  String(
+                    segment?.from ||
+                    ''
+                  ).trim(),
+
+                  String(
+                    segment?.to ||
+                    ''
+                  ).trim(),
+
+                  departureDate.valid
+                    ? departureDate.display
+                    : String(
+                        segment?.departureDate ||
+                        ''
+                      ).trim(),
+
+                  departureTime.valid
+                    ? departureTime.display
+                    : String(
+                        segment?.departureTime ||
+                        ''
+                      ).trim(),
+
+                  arrivalDate.valid
+                    ? arrivalDate.display
+                    : String(
+                        segment?.arrivalDate ||
+                        ''
+                      ).trim(),
+
+                  arrivalTime.valid
+                    ? arrivalTime.display
+                    : String(
+                        segment?.arrivalTime ||
+                        ''
+                      ).trim(),
+
+                  0,
+
+                  extraDetails
+                );
+              }
+            )
+          : [];
+
+
+      if (
+        !segments.length
+      ) {
+        segments.push(
+          createSegment()
+        );
+      }
+
+
+      const lunaService = {
+        id:
+          `service-luna-flight-${Date.now()}-${index}-${Math.random()
+            .toString(36)
+            .slice(2, 7)}`,
+
+        category:
+  'flight',
+
+flightType:
+  (
+    String(
+      flight?.flightType ||
+      ''
+    )
+      .trim()
+      .toLowerCase() ===
+      'domestic' ||
+
+    String(
+      flight?.groupKey ||
+      ''
+    )
+      .trim()
+      .toLowerCase()
+      .startsWith(
+        'domestic-'
+      )
+  )
+    ? 'domestic'
+    : 'international',
+
+flightGroupKey:
+  String(
+    flight?.groupKey ||
+    ''
+  ).trim(),
+
+flightGroupLabel:
+  String(
+    flight?.groupLabel ||
+    ''
+  ).trim(),
+
+name:
+          [
+            flight?.airline,
+            flight?.flightNumber
+          ]
+            .filter(
+              Boolean
+            )
+            .join(
+              ' '
+            ) ||
+          'تذاكر الطيران',
+
+        details,
+
+        costMode:
+          'total',
+
+        qty:
+          travelerCount,
+
+        cost,
+
+        segments,
+
+        source:
+          'luna',
+
+        sourceName:
+          String(
+            flight?.sourceName ||
+            ''
+          ).trim(),
+
+        sourceUrl:
+          safeLunaSourceUrl(
+            flight?.sourceUrl
+          ),
+
+        verifiedAt:
+          String(
+            flight?.verifiedAt ||
+            ''
+          ).trim()
+      };
+
+
+      const candidates =
+        state.services
+          .map(
+            (
+              service,
+              serviceIndex
+            ) => ({
+              service,
+              serviceIndex
+            })
+          )
+          .filter(
+            candidate =>
+              isReplaceableFlight(
+                candidate.service
+              ) &&
+              !replacedFlightIds.has(
+                candidate.service.id
+              )
+          )
+          .map(
+            candidate => ({
+              ...candidate,
+
+              score:
+                flightMatchScore(
+                  candidate.service,
+                  lunaService
+                )
+            })
+          )
+          .sort(
+            (
+              a,
+              b
+            ) =>
+              b.score -
+              a.score
+          );
+
+
+      let replacement =
+        candidates[0] ||
+        null;
+
+
+      /*
+       * إذا كان عندنا أكثر من طيران مبدئي
+       * ولا يوجد أي تطابق في المسار أو التاريخ،
+       * لا نخمن أي واحد يجب استبداله.
+       */
+      if (
+        replacement &&
+        replacement.score === 0 &&
+        candidates.length > 1
+      ) {
+        replacement =
+          null;
+      }
+
+
+      if (
+        replacement
+      ) {
+        lunaService.id =
+          replacement.service.id;
+
+
+        state.services[
+          replacement.serviceIndex
+        ] =
+          lunaService;
+
+
+        replacedFlightIds.add(
+          replacement.service.id
+        );
+      } else {
+        state.services.push(
+          lunaService
+        );
+      }
+    }
+  );
+
+
+  hotels.forEach(
+  (
+    hotel,
+    index
+  ) => {
+
+      const taxesIncluded =
+        hotel?.taxesIncluded === true ||
+        String(
+          hotel?.taxesIncluded
+        )
+          .trim()
+          .toLowerCase() ===
+          'true';
+
+
+      const taxesNotIncluded =
+        hotel?.taxesIncluded === false ||
+        String(
+          hotel?.taxesIncluded
+        )
+          .trim()
+          .toLowerCase() ===
+          'false';
+
+
+      const taxesAmount =
+        Number(
+          hotel?.taxesAmount
+        );
+
+
+      const importedHotelTax =
+        taxesNotIncluded &&
+        Number.isFinite(
+          taxesAmount
+        ) &&
+        taxesAmount > 0
+          ? taxesAmount
+          : 0;
+
+
+      const city =
+        String(
+          hotel?.city ||
+          'غير محددة'
+        ).trim();
+
+
+      const normalizedCity =
+        normalizeRouteText(
+          city
+        );
+
+
+      const hotelCheckIn =
+        parseFlexibleDate(
+          hotel?.checkIn ||
+          ''
+        );
+
+
+      const hotelCheckOut =
+        parseFlexibleDate(
+          hotel?.checkOut ||
+          ''
+        );
+
+
+      /*
+       * أولاً نحاول معرفة الإقامة من:
+       * المدينة + تاريخ الدخول + تاريخ الخروج.
+       *
+       * وهذا يمنع خلط بانكوك الأولى
+       * مع بانكوك الأخيرة.
+       */
+      const requestedTripStopIndex =
+  Number(
+    hotel?.tripStopIndex
+  );
+
+
+const requestedTripStop =
+  Number.isInteger(
+    requestedTripStopIndex
+  ) &&
+  requestedTripStopIndex >= 0
+    ? state.tripStops?.[
+        requestedTripStopIndex
+      ] ||
+      null
+    : null;
+
+
+const requestedStopType =
+  requestedTripStop
+    ?.stopType ===
+      'pass_through'
+      ? 'pass_through'
+      : 'stay';
+
+
+const requestedStopNights =
+  Number.parseInt(
+    requestedTripStop
+      ?.nights,
+    10
+  );
+
+
+const requestedStopHasNoStay =
+  Boolean(
+    requestedTripStop
+  ) &&
+  (
+    requestedStopType ===
+      'pass_through' ||
+    (
+      Number.isFinite(
+        requestedStopNights
+      ) &&
+      requestedStopNights <= 0
+    )
+  );
+
+
+/*
+ * حماية إضافية:
+ * إذا أعاد Luna فندقًا لمحطة عبور أو
+ * لمحطة لا تحتوي إقامة، نتجاهل الفندق
+ * بالكامل بدل نقله إلى إقامة أخرى.
+ */
+if (
+  requestedStopHasNoStay
+) {
+  return;
+}
+
+
+let matchingSlot =
+  null;
+
+
+/*
+ * المطابقة الأولى:
+ * tripStopIndex القادم من Luna.
+ *
+ * هذه هي أدق طريقة لأنها تربط الفندق
+ * مباشرة بالإقامة المقصودة حتى لو
+ * تكررت نفس المدينة أكثر من مرة.
+ */
+if (
+  Number.isInteger(
+    requestedTripStopIndex
+  ) &&
+  requestedTripStopIndex >=
+    0
+) {
+  matchingSlot =
+    hotelSlots.find(
+      slot =>
+        slot.tripStopIndex ===
+          requestedTripStopIndex &&
+        !fallbackHotelIndexes.has(
+          slot.tripStopIndex
+        )
+    );
+}
+
+
+/*
+ * المطابقة الثانية:
+ * تاريخ الدخول + تاريخ الخروج.
+ */
+if (
+  !matchingSlot &&
+  hotelCheckIn.dateKey &&
+  hotelCheckOut.dateKey
+) {
+  matchingSlot =
+    hotelSlots.find(
+      slot =>
+        !fallbackHotelIndexes.has(
+          slot.tripStopIndex
+        ) &&
+        slot.checkIn ===
+          hotelCheckIn.dateKey &&
+        slot.checkOut ===
+          hotelCheckOut.dateKey
+    );
+}
+
+
+/*
+ * المطابقة الثالثة:
+ * اسم المدينة.
+ */
+if (
+  !matchingSlot
+) {
+  matchingSlot =
+    hotelSlots.find(
+      slot =>
+        !fallbackHotelIndexes.has(
+          slot.tripStopIndex
+        ) &&
+        slot.city ===
+          normalizedCity
+    );
+}
+
+
+/*
+ * المطابقة الأخيرة:
+ * أول إقامة لم تستخدم بعد.
+ */
+if (
+  !matchingSlot
+) {
+  matchingSlot =
+    hotelSlots.find(
+      slot =>
+        !fallbackHotelIndexes.has(
+          slot.tripStopIndex
+        )
+    );
+}
+
+
+      const tripStopIndex =
+        matchingSlot
+          ? matchingSlot.tripStopIndex
+          : -1;
+
+
+      if (
+        matchingSlot
+      ) {
+        fallbackHotelIndexes.add(
+          matchingSlot.tripStopIndex
+        );
+      }
+
+
+      const currency =
+        String(
+          hotel?.currency ||
+          'SAR'
+        )
+          .trim()
+          .toUpperCase();
+
+
+      const rawPrice =
+        Number(
+          hotel?.totalPrice
+        );
+
+
+      const cost =
+        currency === 'SAR' &&
+        Number.isFinite(
+          rawPrice
+        )
+          ? Math.max(
+              0,
+              rawPrice
+            )
+          : 0;
+
+
+
+    
+      const details =
+  shortLunaRoomType(
+    hotel?.roomType
+  );
+
+
+      const lunaService = {
+        id:
+          `service-luna-hotel-${Date.now()}-${index}-${Math.random()
+            .toString(36)
+            .slice(2, 7)}`,
+
+        category:
+          'hotel',
+
+        city,
+
+name:
+  String(
+    hotel?.name ||
+    `فندق في ${city}`
+  ).trim(),
+
+hotelStars:
+  hotel?.stars ?? '',
+
+roomType:
+  String(
+    hotel?.roomType ||
+    ''
+  ).trim(),
+
+roomSize:
+  String(
+    hotel?.roomSize ||
+    ''
+  ).trim(),
+
+board:
+  String(
+    hotel?.board ||
+    ''
+  ).trim(),
+
+cancellation:
+  shortLunaCancellation(
+    hotel?.cancellation
+  ),
+
+details,
+
+        checkIn:
+          hotelCheckIn.valid
+            ? hotelCheckIn.display
+            : String(
+                hotel?.checkIn ||
+                ''
+              ).trim(),
+
+        checkInTime:
+          '3:00 PM',
+
+        checkOut:
+          hotelCheckOut.valid
+            ? hotelCheckOut.display
+            : String(
+                hotel?.checkOut ||
+                ''
+              ).trim(),
+
+        checkOutTime:
+          '12:00 PM',
+
+        hotelTax:
+  importedHotelTax,
+
+        costMode:
+  'total',
+
+qty:
+  travelerCount,
+
+cost,
+
+        source:
+          'luna',
+
+        sourceName:
+          String(
+            hotel?.sourceName ||
+            ''
+          ).trim(),
+
+        sourceUrl:
+          safeLunaSourceUrl(
+            hotel?.sourceUrl
+          ),
+
+        verifiedAt:
+          String(
+            hotel?.verifiedAt ||
+            ''
+          ).trim()
+      };
+
+
+      if (
+        tripStopIndex >= 0
+      ) {
+        lunaService.tripStopIndex =
+          tripStopIndex;
+      }
+
+
+      /*
+       * أول فندق مختار للإقامة يستبدل
+       * الفندق المبدئي.
+       *
+       * إذا اختار المستخدم أكثر من فندق
+       * لنفس الإقامة، نحتفظ بالبقية كخيارات
+       * إضافية بدلاً من حذفها.
+       */
+      const placeholderIndex =
+        tripStopIndex >= 0 &&
+        !replacedHotelIndexes.has(
+          tripStopIndex
+        )
+          ? state.services.findIndex(
+              service =>
+                isReplaceableHotel(
+                  service
+                ) &&
+                Number(
+                  service.tripStopIndex
+                ) ===
+                  tripStopIndex
+            )
+          : -1;
+
+
+      if (
+        placeholderIndex >= 0
+      ) {
+        lunaService.id =
+          state.services[
+            placeholderIndex
+          ].id;
+
+
+        state.services[
+          placeholderIndex
+        ] =
+          lunaService;
+
+
+        replacedHotelIndexes.add(
+          tripStopIndex
+        );
+      } else {
+        state.services.push(
+          lunaService
+        );
+      }
+
+
+      if (
+        city &&
+        !state.hotelCities.includes(
+          city
+        )
+      ) {
+        state.hotelCities.push(
+          city
+        );
+      }
+    }
+  );
+
+
+  return {
+    flightCount:
+      flights.length,
+
+    hotelCount:
+      hotels.length
+  };
+}
+
+
+/*
+ * =========================================================
+ * ANALYZE LUNA JSON
+ * =========================================================
+ */
+
+$('#analyzeLunaJsonBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      try {
+        pendingLunaResults =
+          parseLunaResults();
+
+
+        selectedLunaResults
+          .flights
+          .clear();
+
+
+        selectedLunaResults
+          .hotels
+          .clear();
+
+
+        const flightCount =
+          pendingLunaResults
+            .flights
+            .length;
+
+
+        const hotelCount =
+  pendingLunaResults
+    .hotels
+    .filter(
+      hotel => {
+        const tripStopIndex =
+          Number(
+            hotel
+              ?.tripStopIndex
+          );
+
+
+        /*
+         * إذا لم يكن هناك رقم محطة صالح،
+         * فهذا الفندق ما زال يظهر في النتائج.
+         */
+        if (
+          !Number.isInteger(
+            tripStopIndex
+          ) ||
+          tripStopIndex < 0
+        ) {
+          return true;
+        }
+
+
+        const tripStop =
+          state.tripStops?.[
+            tripStopIndex
+          ] ||
+          null;
+
+
+        /*
+         * إذا لم نجد المحطة،
+         * لا نخفي الفندق من العداد.
+         */
+        if (
+          !tripStop
+        ) {
+          return true;
+        }
+
+
+        const stopType =
+          tripStop?.stopType ===
+            'pass_through'
+            ? 'pass_through'
+            : 'stay';
+
+
+        const parsedNights =
+          Number.parseInt(
+            tripStop?.nights,
+            10
+          );
+
+
+        const hasNoStay =
+          stopType ===
+            'pass_through' ||
+          (
+            Number.isFinite(
+              parsedNights
+            ) &&
+            parsedNights <= 0
+          );
+
+
+        return !hasNoStay;
+      }
+    )
+    .length;
+
+
+        renderLunaResultsPreview(
+          pendingLunaResults
+        );
+
+
+        setLunaResultsStatus(
+          `تم تحليل ${flightCount} خيار طيران و${hotelCount} خيار فندق`,
+          'success'
+        );
+
+
+        closeLunaJsonDialog();
+
+
+        setTimeout(
+          () => {
+            openLunaResultsDialog();
+          },
+          50
+        );
+      } catch (
+        error
+      ) {
+        pendingLunaResults =
+          null;
+
+
+        console.error(
+          '[Luna JSON Import]',
+          error
+        );
+
+
+        setLunaResultsStatus(
+          error?.message ||
+          'تعذر قراءة نتائج Luna',
+          'error'
+        );
+      }
+    }
+  );
+
+
+/*
+ * =========================================================
+ * IMPORT SELECTED LUNA RESULTS
+ * =========================================================
+ */
+
+$('#importLunaResultsBtn')
+  ?.addEventListener(
+    'click',
+    () => {
+      try {
+        if (
+          !pendingLunaResults
+        ) {
+          toast(
+            'لا توجد نتائج Luna جاهزة للاستيراد'
+          );
+
+
+          closeLunaResultsDialog();
+
+
+          setTimeout(
+            () => {
+              openLunaJsonDialog();
+            },
+            50
+          );
+
+
+          return;
+        }
+
+
+        const selectedResults =
+          getSelectedLunaResults();
+
+
+        const selectedFlightCount =
+          selectedResults
+            .flights
+            .length;
+
+
+        const selectedHotelCount =
+          selectedResults
+            .hotels
+            .length;
+
+
+        if (
+          !selectedFlightCount &&
+          !selectedHotelCount
+        ) {
+          toast(
+            'اختر رحلة أو فندقاً واحداً على الأقل'
+          );
+
+
+          return;
+        }
+
+
+        const imported =
+          importSelectedLunaResultsToOffer(
+            selectedResults
+          );
+
+
+        renderAll();
+
+
+        scheduleAutoSave();
+
+
+        selectedLunaResults
+          .flights
+          .clear();
+
+
+        selectedLunaResults
+          .hotels
+          .clear();
+
+
+        pendingLunaResults =
+          null;
+
+
+        const preview =
+          $('#lunaResultsPreview');
+
+
+        if (
+          preview
+        ) {
+          preview.innerHTML =
+            '';
+
+          preview.hidden =
+            true;
+        }
+
+
+        const textarea =
+          $('#lunaResultsJson');
+
+
+        if (
+          textarea
+        ) {
+          textarea.value =
+            '';
+        }
+
+
+        closeLunaResultsDialog();
+
+
+        toast(
+          `تم استيراد ${imported.flightCount} طيران و${imported.hotelCount} فندق إلى العرض`
+        );
+      } catch (
+        error
+      ) {
+        console.error(
+          '[Luna Import]',
+          error
+        );
+
+
+        toast(
+          error?.message ||
+          'تعذر استيراد نتائج Luna'
+        );
+      }
     }
   );
 })();
